@@ -1,0 +1,53 @@
+#post h1
+{
+  color: #fff;
+}
+
+.post
+{
+  margin-top: 20px;
+}
+
+.post-header
+{
+  max-width: 100%;
+  position: relative;
+  margin-bottom:40px;
+  overflow: hidden;
+}
+
+.post-header-image
+{
+  max-height: 420px;
+}
+
+.post-header-image .post-image
+{
+  width: 100%;
+}
+
+#post .panel
+{
+  margin-top: 40px;
+}
+
+#post .quote
+{
+  color: #ccf;
+  padding: 40px;
+  font-size: 24px;
+  font-style: italic;
+  font-weight: 100;
+}
+
+q:before
+{
+  color: #3D4D86;
+  font-size: 42px;
+}
+
+q:after
+{
+  color: #3D4D86;
+  font-size: 42px;
+}

@@ -1,0 +1,16 @@
+html
+{
+  background:#293450 url('/images/background_sky.png') repeat-x;
+}
+
+body
+{
+  background:url('/images/background_mountains_back.png') repeat-x 10% 0px;
+}
+
+#mountains
+{
+  background: url('/images/background_mountains_front.png') repeat-x 30% 10px;
+  height: 300px;
+}
+

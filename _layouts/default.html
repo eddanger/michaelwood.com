@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ site.name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+    <link href="/css/mountains.css" rel="stylesheet">
+    {% if page.name %}
+      <link href="/css/{{ page.name }}.css" rel="stylesheet">
+    {% endif %}
+
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+  </head>
+
+  <body>
+    <div id="mountains"></div>
+
+    <div class="container" id="header">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="page-header">
+            <h1>Michael Wood's Reverie</h1>
+            <h3>Father, entrepreneur, extra-specialist, caffeine junkie.</h3>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <ul class="nav nav-pills pull-right">
+            <li class="{% if page.name == 'home' %}active{% endif %}">
+              <a href="/">At the moment...</a>
+            </li>
+            <li class="{% if page.name == 'about' %}active{% endif %}">
+              <a href="/about">About me</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" id="content">
+      {{ content }}
+    </div>
+
+    <div class="container text-center" id="footer">
+      &copy; 1977-2013 Michael Wood
+    </div>
+  </body>
+</html>
