@@ -1,0 +1,42 @@
+/* Overall terminal look */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  color: #33FF33;
+  font-family: "Fira Code", "Courier New", Courier, monospace;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Terminal container */
+#terminal {
+  box-sizing: border-box;
+  padding: 10px;
+  height: 100vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+/* The static prompt text */
+.prompt-text {
+  display: inline;
+}
+
+/* The editable input span */
+.cmd-input {
+  outline: none;
+  border: none;
+  background: none;
+  color: inherit;
+  display: inline;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+  min-width: 10px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
