@@ -3,7 +3,11 @@ michaelwood.com
 
 michaelwood.com
 
-# Docker Setup
+## Docker Setup
 
 docker build -t michaelwood.com .
 docker run -it -p 8080:5000 michaelwood.com
+
+## Local Development
+
+`python -m http.server`
