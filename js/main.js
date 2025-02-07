@@ -1,4 +1,4 @@
-import { Terminal } from "./terminal/Terminal.js";
+import { Terminal } from "./commands/terminal/Terminal.js";
 import { ProcessManager } from "./ProcessManager.js";
 
 // Initialize ProcessManager

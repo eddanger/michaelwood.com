@@ -5,46 +5,29 @@ import PwdCommand from "./commands/pwd.js";
 import ExitCommand from "./commands/exit.js";
 import GitHubCommand from "./commands/github.js";
 import DateCommand from "./commands/date.js";
-import Command from "./commands/Command.js";
-import { Terminal } from "./terminal/Terminal.js";
+import ClearCommand from "./commands/clear.js";
+import TerminalCommand from "./commands/terminal/TerminalCommand.js";
 
-// Define Terminal Command class inline
-class TerminalCommand extends Command {
-    constructor() {
-        super('terminal', 'Spawn a new terminal process');
-    }
-
-    execute(terminal) {
-        // Create terminal process launcher
-        const createTerminal = (container) => {
-            // Create new terminal instance
-            const newTerminal = new Terminal(container);
-            newTerminal.processManager = terminal.processManager;
-            return newTerminal;
-        };
-
-        // Launch new terminal process with current process as parent
-        const currentProcessId = terminal.processManager.getActiveProcessId();
-        terminal.processManager.launchProcess(createTerminal, currentProcessId);
-        return "New terminal process created.";
-    }
-}
-
-// Create instances of each command
+// Create command instances
 const commandInstances = {
-    "motd": new MotdCommand(),
-    "exit": new ExitCommand(),
-    "github": new GitHubCommand(),
-    "pwd": new PwdCommand(),
-    "whoami": new WhoamiCommand(),
-    "date": new DateCommand(),
-    "uptime": new UptimeCommand(),
-    "terminal": new TerminalCommand(),
+    motd: new MotdCommand(),
+    exit: new ExitCommand(),
+    github: new GitHubCommand(),
+    pwd: new PwdCommand(),
+    whoami: new WhoamiCommand(),
+    date: new DateCommand(),
+    uptime: new UptimeCommand(),
+    terminal: new TerminalCommand(),
+    clear: new ClearCommand()
 };
 
+// Export commands as functions that call execute()
 export const availableCommands = {
-    ...commandInstances,
-    help: function() {
+    ...Object.entries(commandInstances).reduce((acc, [name, cmd]) => ({
+        ...acc,
+        [name]: (terminal, ...args) => cmd.execute(terminal, ...args)
+    }), {}),
+    help: () => {
         const cmds = Object.keys(commandInstances).sort();
         let output = "Available commands:\n";
         cmds.forEach(cmd => {
@@ -54,11 +37,3 @@ export const availableCommands = {
         return output;
     }
 };
-
-// Wrap each command's execute method
-Object.keys(commandInstances).forEach(cmd => {
-    const command = commandInstances[cmd];
-    availableCommands[cmd] = function(terminal) {
-        return command.execute(terminal);
-    };
-});

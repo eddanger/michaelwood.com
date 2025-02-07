@@ -1,7 +1,7 @@
 import { TerminalUI } from './TerminalUI.js';
 import { CommandHistory } from './CommandHistory.js';
 import { CommandProcessor } from './CommandProcessor.js';
-import { availableCommands } from '../commands.js';
+import { availableCommands } from '../../commands.js';
 
 export class Terminal {
     constructor(container) {
