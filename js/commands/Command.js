@@ -1,33 +1,55 @@
 /**
- * Base Command class that all terminal commands should inherit from
+ * @fileoverview Base command class that all terminal commands extend.
+ * Provides common functionality and structure for commands.
+ */
+
+/**
+ * Base class for all terminal commands.
+ * Provides common functionality and structure that all commands should follow.
+ * @abstract
  */
 export default class Command {
-  constructor(name, description = '') {
-    this.name = name;
-    this.description = description;
-  }
+    /**
+     * Creates a new Command instance.
+     * @param {string} name - The name of the command
+     * @param {string} description - A brief description of what the command does
+     */
+    constructor(name, description) {
+        if (new.target === Command) {
+            throw new TypeError('Cannot instantiate abstract Command class directly');
+        }
+        
+        /** @type {string} The name of the command */
+        this.name = name;
+        
+        /** @type {string} Description of what the command does */
+        this.description = description;
+    }
 
-  /**
-   * Execute the command and return its output
-   * @returns {string} The command output
-   */
-  execute() {
-    throw new Error('Command must implement execute() method');
-  }
+    /**
+     * Gets the command name.
+     * @returns {string} The command name
+     */
+    getName() {
+        return this.name;
+    }
 
-  /**
-   * Get the command name
-   * @returns {string} The command name
-   */
-  getName() {
-    return this.name;
-  }
+    /**
+     * Gets the command description.
+     * @returns {string} The command description
+     */
+    getDescription() {
+        return this.description;
+    }
 
-  /**
-   * Get the command description
-   * @returns {string} The command description
-   */
-  getDescription() {
-    return this.description;
-  }
+    /**
+     * Executes the command.
+     * @param {Terminal} terminal - The terminal instance executing the command
+     * @param {...string} args - Command arguments
+     * @returns {string} Command output
+     * @abstract
+     */
+    execute(terminal, ...args) {
+        throw new Error('Command subclass must implement execute() method');
+    }
 }

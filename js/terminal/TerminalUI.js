@@ -1,8 +1,15 @@
 /**
+ * @fileoverview Handles all DOM-related operations for the terminal interface.
+ * Manages input handling, display, and visual feedback.
+ */
+
+/**
  * Handles all DOM-related operations for the terminal interface.
+ * Manages terminal display, input handling, and visual feedback.
  */
 export class TerminalUI {
     /**
+     * Creates a new TerminalUI instance.
      * @param {HTMLElement} terminalElement - The terminal container element
      * @param {Object} config - Configuration options
      * @param {string} [config.promptText='user:~$ '] - The prompt text to display
@@ -23,7 +30,8 @@ export class TerminalUI {
     }
 
     /**
-     * Initialize all event handlers for the terminal
+     * Initialize all event handlers for the terminal.
+     * @private
      */
     initializeEventHandlers() {
         // Handle clicks on the terminal container
@@ -56,7 +64,7 @@ export class TerminalUI {
             }
         });
 
-        // Prevent focus loss and handle tab key
+        // Prevent focus loss and handle special keys
         document.addEventListener('keydown', (event) => {
             const activeInput = this.terminal.querySelector('.cmd-input:focus');
             if (activeInput) {
@@ -71,7 +79,9 @@ export class TerminalUI {
     }
 
     /**
-     * Helper function to place the caret at the end of a contentEditable element.
+     * Places the caret at the end of a contentEditable element.
+     * @param {HTMLElement} el - The element to place the caret in
+     * @private
      */
     placeCaretAtEnd(el) {
         el.focus();
@@ -87,7 +97,9 @@ export class TerminalUI {
     }
 
     /**
-     * Creates a new prompt line with a blinking caret.
+     * Creates a new prompt line with input handling.
+     * @param {Function} inputHandler - Callback for handling input events
+     * @returns {HTMLElement} The input element
      */
     createPrompt(inputHandler) {
         const promptLine = document.createElement('div');
@@ -125,7 +137,9 @@ export class TerminalUI {
     }
 
     /**
-     * Displays output in the terminal with an optional className.
+     * Displays output in the terminal.
+     * @param {string} output - The text to display
+     * @param {string} [className=''] - Optional CSS class for styling
      */
     displayOutput(output, className = '') {
         if (output) {
@@ -141,6 +155,8 @@ export class TerminalUI {
 
     /**
      * Replaces the current input line with a static command line.
+     * @param {HTMLElement} inputSpan - The input element to replace
+     * @param {string} command - The command text to display
      */
     replacePromptWithCommand(inputSpan, command) {
         const commandLine = document.createElement('div');
@@ -154,45 +170,5 @@ export class TerminalUI {
      */
     clear() {
         this.terminal.innerHTML = "";
-    }
-
-    /**
-     * Binds the terminal click event to focus the current input.
-     */
-    bindTerminalClick() {
-        this.terminal.addEventListener('click', (event) => {
-            // Only handle clicks directly on the terminal container
-            if (event.target === this.terminal) {
-                const currentInput = this.terminal.querySelector('.cmd-input');
-                if (currentInput) {
-                    this.placeCaretAtEnd(currentInput);
-                }
-            }
-        });
-    }
-
-    bindFocusHandling() {
-        // Handle focus events
-        this.terminal.addEventListener('focusin', (event) => {
-            if (event.target.classList.contains('cmd-input')) {
-                event.target.parentElement.classList.add('active');
-            }
-        });
-
-        this.terminal.addEventListener('focusout', (event) => {
-            if (event.target.classList.contains('cmd-input')) {
-                event.target.parentElement.classList.remove('active');
-            }
-        });
-
-        // Prevent focus loss
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Tab') {
-                const currentInput = this.terminal.querySelector('.cmd-input');
-                if (currentInput && document.activeElement === currentInput) {
-                    event.preventDefault();
-                }
-            }
-        });
     }
 }

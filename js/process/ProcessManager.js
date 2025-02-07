@@ -1,18 +1,38 @@
 /**
+ * @fileoverview Process management system for handling multiple terminal instances.
+ * Manages process creation, termination, and switching between processes.
+ */
+
+/**
  * Manages multiple processes and their lifecycle.
+ * Handles process creation, termination, parent-child relationships,
+ * and process switching.
  */
 export class ProcessManager {
+    /**
+     * Creates a new ProcessManager instance.
+     */
     constructor() {
+        /** @type {Map<string, Object>} Map of process IDs to process instances */
         this.processes = new Map();
+        
+        /** @type {Map<string, string>} Map of process IDs to their parent process IDs */
         this.parentProcesses = new Map();
+        
+        /** @type {string|null} Currently active process ID */
         this.activeProcessId = null;
+        
+        /** @type {number} Counter for generating unique process IDs */
         this.lastProcessId = 0;
+        
+        /** @type {HTMLElement} Container element for all processes */
         this.processesContainer = document.getElementById('processes');
     }
 
     /**
-     * Launches a new process
+     * Launches a new process.
      * @param {Function} processLauncher - Function that creates and returns the process
+     * @param {string} [parentProcessId=null] - ID of the parent process
      * @returns {Object} The created process instance
      */
     launchProcess(processLauncher, parentProcessId = null) {

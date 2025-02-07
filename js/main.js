@@ -1,7 +1,12 @@
-import { Terminal } from "./commands/terminal/Terminal.js";
-import { ProcessManager } from "./ProcessManager.js";
+/**
+ * @fileoverview Main entry point for the terminal application.
+ * Initializes process manager and creates the initial terminal process.
+ */
 
-// Initialize ProcessManager
+import { Terminal } from "./terminal/Terminal.js";
+import { ProcessManager } from "./process/ProcessManager.js";
+
+// Initialize ProcessManager globally for process management
 window.processManager = new ProcessManager();
 
 // Create initial terminal process
