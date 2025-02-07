@@ -1,14 +1,10 @@
-import { availableCommands } from "./commands.js";
 import { Terminal } from "./terminal/Terminal.js";
+import { ProcessManager } from "./ProcessManager.js";
 
-// Initialize the terminal with the terminal element, available commands, and configuration
-const terminal = new Terminal(
-    document.getElementById('terminal'),
-    availableCommands,
-    {
-        promptText: 'michaelwood:~$ '
-    }
-);
+// Initialize ProcessManager
+window.processManager = new ProcessManager();
 
-// When the user clicks anywhere in the terminal, the terminal class will handle focusing the input
-// through its UI component's click handler, so we don't need any additional click handling here
+// Create initial terminal process
+window.processManager.launchProcess((container) => {
+    return new Terminal(container);
+});
