@@ -1,73 +1,36 @@
-/* Overall terminal look */
 body {
   margin: 0;
   padding: 0;
-  background-color: #000;
-  color: #FFD700;
-  font-family: "Fira Code", "Courier New", Courier, monospace;
-  height: 100vh;
+  background: #111;
   overflow: hidden;
 }
 
-/* Processes container */
-#processes {
-  position: fixed;
-  top: 0;
-  left: 0;
+#viewport {
+  position: relative;
   width: 100vw;
   height: 100vh;
-  background-color: #000;
-  color: #FFD700;
   overflow: hidden;
+  background: #111;
 }
 
-/* Process styles */
-.process {
+#grid {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 10px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  background-color: #000;
-  color: #FFD700;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+  background: transparent;
 }
 
-/* Terminal process specific styles */
-.process.terminal {
-  display: none;
+.pixel {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #333;
+  border: 1px solid #222;
+  box-sizing: content-box;
+  transition: background-color 0.1s ease;
 }
 
-.process.terminal:only-child,
-.process.terminal:last-child {
-  display: block;
-}
-
-.prompt-line.active {
-  background-color: rgba(51, 255, 51, 0.1);
-}
-
-/* The static prompt text */
-.prompt-text {
-  display: inline;
-}
-
-/* The editable input span */
-.cmd-input {
-  outline: none;
-  border: none;
-  background: none;
-  color: inherit;
-  display: inline;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  vertical-align: baseline;
-  min-width: 10px;
+.pixel:hover {
+  background: #555 !important;
+  border-color: #777 !important;
 }

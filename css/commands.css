@@ -1,6 +1,0 @@
-/* Styling for the Message-of-the-Day (MOTD) */
-.motd {
-  margin-bottom: 1em;
-  color: #FFD700; /* Gold color, for example */
-  white-space: pre-wrap; /* Preserve newlines */
-}
