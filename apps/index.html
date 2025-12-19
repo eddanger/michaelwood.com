@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apps - michaelwood.com</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #viewport {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: auto;
+      background: #000;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: white;
+      background: #333;
+      padding: 10px;
+      border-radius: 10px;
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+
+    .app-item:hover {
+      background: #555;
+    }
+
+    .app-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .app-icon img {
+      width: 32px;
+      height: 32px;
+      object-fit: cover;
+      display: block;
+      filter: invert(1);
+    }
+
+    .app-name {
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <div class="app-grid">
+      <a href="https://netflix.com" class="app-item" target="_blank">
+        <img src="icons/netflix.svg" alt="Netflix" class="app-icon">
+        <div class="app-name">Netflix</div>
+      </a>
+      <a href="https://primevideo.com" class="app-item" target="_blank">
+        <img src="icons/play.svg" alt="Amazon Prime Video" class="app-icon">
+        <div class="app-name">Amazon Prime Video</div>
+      </a>
+      <a href="https://disneyplus.com" class="app-item" target="_blank">
+        <img src="icons/play.svg" alt="Disney+" class="app-icon">
+        <div class="app-name">Disney+</div>
+      </a>
+      <a href="https://tv.apple.com" class="app-item" target="_blank">
+        <img src="icons/apple.svg" alt="AppleTV+" class="app-icon">
+        <div class="app-name">AppleTV+</div>
+      </a>
+      <a href="https://youtube.com" class="app-item" target="_blank">
+        <img src="icons/youtube.svg" alt="YouTube" class="app-icon">
+        <div class="app-name">YouTube</div>
+      </a>
+      <a href="https://x.com" class="app-item" target="_blank">
+        <img src="icons/x.svg" alt="X" class="app-icon">
+        <div class="app-name">X</div>
+      </a>
+      <a href="https://facebook.com" class="app-item" target="_blank">
+        <img src="icons/facebook.svg" alt="Facebook" class="app-icon">
+        <div class="app-name">Facebook</div>
+      </a>
+      <a href="https://instagram.com" class="app-item" target="_blank">
+        <img src="icons/instagram.svg" alt="Instagram" class="app-icon">
+        <div class="app-name">Instagram</div>
+      </a>
+      <a href="https://tiktok.com" class="app-item" target="_blank">
+        <img src="icons/tiktok.svg" alt="TikTok" class="app-icon">
+        <div class="app-name">TikTok</div>
+      </a>
+      <a href="https://spotify.com" class="app-item" target="_blank">
+        <img src="icons/spotify.svg" alt="Spotify" class="app-icon">
+        <div class="app-name">Spotify</div>
+      </a>
+      <a href="https://gemini.google.com" class="app-item" target="_blank">
+        <img src="icons/google.svg" alt="Google Gemini" class="app-icon">
+        <div class="app-name">Google Gemini</div>
+      </a>
+      <a href="https://gmail.com" class="app-item" target="_blank">
+        <img src="icons/gmail.svg" alt="Gmail" class="app-icon">
+        <div class="app-name">Gmail</div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>
