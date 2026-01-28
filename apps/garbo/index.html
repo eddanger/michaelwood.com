@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garbo - GarageBot Status</title>
+  <meta http-equiv="refresh" content="30">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 20px;
+      border-bottom: 2px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .bot-icon {
+      font-size: 48px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .header h1 {
+      font-size: 24px;
+      color: #fff;
+    }
+    .header .subtitle {
+      font-size: 14px;
+      color: #888;
+    }
+    .status-badge {
+      margin-left: auto;
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: #2d5a27;
+      color: #7fff7f;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .status-badge.idle {
+      background: #5a5a27;
+      color: #ffff7f;
+    }
+    .status-badge.busy {
+      background: #5a2727;
+      color: #ff7f7f;
+    }
+    .container {
+      flex: 1;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #333;
+    }
+    .card h2 {
+      font-size: 16px;
+      color: #7fafff;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .activity-item {
+      padding: 12px;
+      background: #0f0f0f;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 3px solid #4a9eff;
+    }
+    .activity-item:last-child {
+      margin-bottom: 0;
+    }
+    .activity-time {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .activity-desc {
+      font-size: 14px;
+      color: #ccc;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+    .metric {
+      background: #0f0f0f;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #555;
+    }
+    .log-entry {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      padding: 8px;
+      border-bottom: 1px solid #222;
+    }
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    .log-time {
+      color: #666;
+    }
+    .log-info { color: #7fafff; }
+    .log-success { color: #7fff7f; }
+    .log-warn { color: #ffff7f; }
+    .log-error { color: #ff7f7f; }
+    .back-link {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="bot-icon">🤖</div>
+    <div>
+      <h1>Garbo</h1>
+      <div class="subtitle">GarageBot Status Dashboard</div>
+    </div>
+    <div class="status-badge" id="status">Online</div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Current Activity</h2>
+      <div id="current-activity">
+        <div class="activity-item">
+          <div class="activity-time">2026-01-28 15:18 PST</div>
+          <div class="activity-desc">Building Garbo status dashboard for Tesla launcher</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>System Metrics</h2>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-value">ON</div>
+          <div class="metric-label">Status</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">🚗</div>
+          <div class="metric-label">Location</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">Gmail</div>
+          <div class="metric-label">Connected</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">Calendar</div>
+          <div class="metric-label">Connected</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Recent Logs</h2>
+      <div id="logs">
+        <div class="log-entry">
+          <span class="log-time">15:18</span> 
+          <span class="log-success">✓ Gmail API connected</span>
+        </div>
+        <div class="log-entry">
+          <span class="log-time">15:18</span> 
+          <span class="log-success">✓ Calendar API connected</span>
+        </div>
+        <div class="log-entry">
+          <span class="log-time">15:17</span> 
+          <span class="log-info">OAuth flow completed</span>
+        </div>
+        <div class="log-entry">
+          <span class="log-time">15:02</span> 
+          <span class="log-warn">⚠ OAuth redirect issues</span>
+        </div>
+        <div class="log-entry">
+          <span class="log-time">14:58</span> 
+          <span class="log-info">Started gog auth</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Memory</h2>
+      <div class="activity-item">
+        <div class="activity-desc">Projects: fitnito.com, wemble.com, michaelwood.com</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-desc">User: Michael Wood (Mike)</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-desc">Vibe: Garage-dwelling, whimsical, occasionally dark</div>
+      </div>
+    </div>
+  </div>
+
+  <a href="../" class="back-link">← Back to Apps</a>
+
+  <div class="footer">
+    Last updated: 2026-01-28 15:18 PST • Auto-refreshes every 30s
+  </div>
+
+  <script>
+    // Could fetch real status from an API endpoint
+    // For now, static with auto-refresh
+    console.log('Garbo dashboard loaded');
+  </script>
+</body>
+</html>
