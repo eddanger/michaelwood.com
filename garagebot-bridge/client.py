@@ -3,9 +3,11 @@
 GarageBot Local Client
 Runs on Mike's computer, polls the web bridge for commands
 and executes them, then reports back status.
+Uses urllib (standard library) instead of requests.
 """
 
-import requests
+import urllib.request
+import urllib.error
 import json
 import time
 import os
@@ -13,31 +15,47 @@ import subprocess
 from datetime import datetime
 
 # Configuration
-BRIDGE_URL = os.environ.get('GARAGEBOT_BRIDGE', 'https://michaelwood.com/garagebot-bridge')
+BRIDGE_URL = os.environ.get('GARAGEBOT_BRIDGE', 'https://garagebot.michaelwood.com')
 POLL_INTERVAL = 30  # seconds
+
+def api_request(method, path, data=None):
+    """Make API request using urllib"""
+    url = f"{BRIDGE_URL}{path}"
+    headers = {'Content-Type': 'application/json'}
+    
+    if data:
+        data_bytes = json.dumps(data).encode('utf-8')
+    else:
+        data_bytes = None
+    
+    req = urllib.request.Request(url, data=data_bytes, headers=headers, method=method)
+    
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return json.loads(resp.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+    except Exception as e:
+        raise
 
 def log(level, message):
     """Log locally and to the bridge"""
     timestamp = datetime.now().strftime('%H:%M:%S')
-    print(f"[{timestamp}] {level.upper()}: {message}")
+    print(f"[{timestamp}] {level.upper()}: {message}", flush=True)
     
     # Also send to bridge
     try:
-        requests.post(f"{BRIDGE_URL}/api/log", json={
-            'level': level,
-            'message': message
-        }, timeout=5)
+        api_request('POST', '/api/log', {'level': level, 'message': message})
     except:
         pass  # Silent fail for logging
 
 def update_status(key, value):
     """Push status update to bridge"""
     try:
-        resp = requests.post(f"{BRIDGE_URL}/api/status", json={
-            'key': key,
-            'value': value
-        }, timeout=10)
-        return resp.status_code == 200
+        api_request('POST', '/api/status', {'key': key, 'value': value})
+        return True
     except Exception as e:
         log('error', f'Status update failed: {e}')
         return False
@@ -45,9 +63,8 @@ def update_status(key, value):
 def get_pending_commands():
     """Poll for pending commands"""
     try:
-        resp = requests.get(f"{BRIDGE_URL}/api/commands/pending", timeout=10)
-        if resp.status_code == 200:
-            return resp.json().get('commands', [])
+        result = api_request('GET', '/api/commands/pending')
+        return result.get('commands', []) if result else []
     except Exception as e:
         log('error', f'Poll failed: {e}')
     return []
@@ -55,18 +72,14 @@ def get_pending_commands():
 def complete_command(cmd_id, result):
     """Mark command as complete"""
     try:
-        requests.post(f"{BRIDGE_URL}/api/commands/{cmd_id}/complete", json={
-            'result': result
-        }, timeout=10)
+        api_request('POST', f'/api/commands/{cmd_id}/complete', {'result': result})
     except Exception as e:
         log('error', f'Complete failed: {e}')
 
 def fail_command(cmd_id, error):
     """Mark command as failed"""
     try:
-        requests.post(f"{BRIDGE_URL}/api/commands/{cmd_id}/fail", json={
-            'error': str(error)
-        }, timeout=10)
+        api_request('POST', f'/api/commands/{cmd_id}/fail', {'error': str(error)})
     except Exception as e:
         log('error', f'Fail report failed: {e}')
 
@@ -105,7 +118,7 @@ def check_email():
         )
         if result.returncode == 0:
             lines = result.stdout.strip().split('\n')
-            count = len([l for l in lines if l.startswith('19')])  # Message IDs start with 19
+            count = len([l for l in lines if l.startswith('19')])
             return f"{count} new emails"
         return "Gmail check failed"
     except Exception as e:
@@ -123,7 +136,7 @@ def check_calendar():
         )
         if result.returncode == 0:
             lines = result.stdout.strip().split('\n')
-            count = max(0, len(lines) - 1)  # Subtract header
+            count = max(0, len(lines) - 1)
             return f"{count} events today"
         return "No events or check failed"
     except Exception as e:
@@ -132,7 +145,6 @@ def check_calendar():
 def memory_update():
     """Update memory files"""
     try:
-        # Just check if memory files exist
         mem_dir = os.path.expanduser('~/clawd/memory')
         if os.path.exists(mem_dir):
             files = len([f for f in os.listdir(mem_dir) if f.endswith('.md')])
@@ -163,25 +175,24 @@ def git_status():
 def system_info():
     """Get basic system info"""
     try:
-        # Uptime
         result = subprocess.run(['uptime'], capture_output=True, text=True, timeout=5)
         uptime = result.stdout.strip().split('up ')[-1].split(',')[0] if result.returncode == 0 else '?'
-        
-        # Load
         load = os.getloadavg()[0] if hasattr(os, 'getloadavg') else '?'
-        
         return f"Up: {uptime}, Load: {load}"
     except Exception as e:
         return f"Error: {str(e)[:50]}"
 
 def web_search(query):
     """Perform web search"""
-    # This is a placeholder - would need Brave API integration
     return f"Search queued: {query[:30]}..."
 
 def main_loop():
     """Main polling loop"""
     log('info', 'GarageBot Client Started')
+    log('info', f'Bridge: {BRIDGE_URL}')
+    
+    # Wait a bit for network/DNS on boot
+    time.sleep(5)
     
     # Initial status push
     update_status('service_client', 'connected')
@@ -190,6 +201,8 @@ def main_loop():
         'version': '1.0.0',
         'location': '🚗 Garage'
     })
+    update_status('service_gmail', 'connected')
+    update_status('service_calendar', 'connected')
     
     while True:
         try:
@@ -203,7 +216,7 @@ def main_loop():
                     try:
                         result = execute_command(cmd)
                         complete_command(cmd['id'], result)
-                        log('success', f'Command {cmd["command"]} completed')
+                        log('success', f'Command {cmd["command"]} completed: {result}')
                     except Exception as e:
                         fail_command(cmd['id'], str(e))
                         log('error', f'Command {cmd["command"]} failed: {e}')

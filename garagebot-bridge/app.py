@@ -79,12 +79,12 @@ def require_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('admin'):
-            return redirect('/garagebot-bridge/login')
+            return redirect('/login')
         return f(*args, **kwargs)
     return decorated
 
 # Public Routes
-@app.route('/garagebot-bridge/')
+@app.route('/')
 def public_status():
     """Public status page - safe for anyone"""
     db = get_db()
@@ -126,24 +126,24 @@ def public_status():
                          logs=logs)
 
 # Admin Routes
-@app.route('/garagebot-bridge/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     """Admin login"""
     if request.method == 'POST':
         password = request.form.get('password')
         if password == ADMIN_PASSWORD:
             session['admin'] = True
-            return redirect('/garagebot-bridge/admin')
+            return redirect('/admin')
         return render_template('login.html', error='Invalid password')
     return render_template('login.html')
 
-@app.route('/garagebot-bridge/logout')
+@app.route('/logout')
 def logout():
     """Admin logout"""
     session.pop('admin', None)
-    return redirect('/garagebot-bridge/')
+    return redirect('/')
 
-@app.route('/garagebot-bridge/admin')
+@app.route('/admin')
 @require_auth
 def admin_panel():
     """Admin control panel"""
@@ -341,7 +341,7 @@ def quick_command(cmd):
     )
     db.commit()
     
-    return redirect('/garagebot-bridge/admin')
+    return redirect('/admin')
 
 def create_app():
     """Application factory for gunicorn"""
