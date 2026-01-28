@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GarageBot - GarageBot Status</title>
+  <title>GarageBot - Status</title>
   <meta http-equiv="refresh" content="30">
   <style>
     * {
@@ -18,7 +18,40 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
+    
+    /* Dancing Robot */
+    .robot-container {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 100;
+      cursor: pointer;
+    }
+    .robot {
+      font-size: 64px;
+      animation: dance 1s infinite;
+      filter: drop-shadow(0 0 10px #4a9eff);
+      transition: transform 0.3s;
+    }
+    .robot:hover {
+      transform: scale(1.2);
+    }
+    @keyframes dance {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-10px) rotate(-5deg); }
+      50% { transform: translateY(0) rotate(0deg); }
+      75% { transform: translateY(-10px) rotate(5deg); }
+    }
+    .robot.jumping {
+      animation: jump 0.5s ease-out;
+    }
+    @keyframes jump {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-50px) scale(1.1); }
+    }
+    
     .header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       padding: 20px;
@@ -64,7 +97,7 @@
     .container {
       flex: 1;
       padding: 20px;
-      max-width: 800px;
+      max-width: 600px;
       margin: 0 auto;
       width: 100%;
     }
@@ -76,52 +109,48 @@
       border: 1px solid #333;
     }
     .card h2 {
-      font-size: 16px;
+      font-size: 14px;
       color: #7fafff;
       margin-bottom: 15px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    .activity-item {
-      padding: 12px;
+    .service-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .service {
+      padding: 8px 16px;
       background: #0f0f0f;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      border-left: 3px solid #4a9eff;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .activity-item:last-child {
-      margin-bottom: 0;
+    .service.online {
+      border: 1px solid #2d5a27;
+      color: #7fff7f;
     }
-    .activity-time {
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 4px;
+    .service.offline {
+      border: 1px solid #5a2727;
+      color: #ff7f7f;
     }
-    .activity-desc {
-      font-size: 14px;
-      color: #ccc;
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7fff7f;
+      animation: blink 2s infinite;
     }
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
+    .service.offline .dot {
+      background: #ff7f7f;
+      animation: none;
     }
-    .metric {
-      background: #0f0f0f;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-    }
-    .metric-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #fff;
-    }
-    .metric-label {
-      font-size: 11px;
-      color: #888;
-      text-transform: uppercase;
-      margin-top: 5px;
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
     }
     .footer {
       text-align: center;
@@ -129,22 +158,9 @@
       font-size: 12px;
       color: #555;
     }
-    .log-entry {
-      font-family: 'SF Mono', Monaco, monospace;
-      font-size: 12px;
-      padding: 8px;
-      border-bottom: 1px solid #222;
+    .footer .update-time {
+      color: #888;
     }
-    .log-entry:last-child {
-      border-bottom: none;
-    }
-    .log-time {
-      color: #666;
-    }
-    .log-info { color: #7fafff; }
-    .log-success { color: #7fff7f; }
-    .log-warn { color: #ffff7f; }
-    .log-error { color: #ff7f7f; }
     .back-link {
       position: fixed;
       bottom: 20px;
@@ -155,9 +171,32 @@
       border-radius: 8px;
       text-decoration: none;
       font-size: 14px;
+      z-index: 101;
     }
     .back-link:hover {
       background: #555;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    .stat {
+      text-align: center;
+      padding: 15px;
+      background: #0f0f0f;
+      border-radius: 8px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -166,98 +205,100 @@
     <div class="bot-icon">🤖</div>
     <div>
       <h1>GarageBot</h1>
-      <div class="subtitle">Status Dashboard</div>
+      <div class="subtitle">AI Assistant Status</div>
     </div>
     <div class="status-badge" id="status">Online</div>
   </div>
 
   <div class="container">
     <div class="card">
-      <h2>Current Activity</h2>
-      <div id="current-activity">
-        <div class="activity-item">
-          <div class="activity-time">2026-01-28 15:24 PST</div>
-          <div class="activity-desc">Dashboard deployed to michaelwood.com/apps/garagebot/</div>
+      <h2>Connected Services</h2>
+      <div class="service-list">
+        <div class="service online">
+          <span class="dot"></span>
+          <span>Gmail</span>
+        </div>
+        <div class="service online">
+          <span class="dot"></span>
+          <span>Calendar</span>
+        </div>
+        <div class="service online">
+          <span class="dot"></span>
+          <span>Memory</span>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <h2>System Metrics</h2>
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-value">ON</div>
-          <div class="metric-label">Status</div>
+      <h2>System Status</h2>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">🟢</div>
+          <div class="stat-label">Status</div>
         </div>
-        <div class="metric">
-          <div class="metric-value">🚗</div>
-          <div class="metric-label">Location</div>
+        <div class="stat">
+          <div class="stat-value">🚗</div>
+          <div class="stat-label">Garage</div>
         </div>
-        <div class="metric">
-          <div class="metric-value">Gmail</div>
-          <div class="metric-label">Connected</div>
+        <div class="stat">
+          <div class="stat-value">v1</div>
+          <div class="stat-label">Version</div>
         </div>
-        <div class="metric">
-          <div class="metric-value">Calendar</div>
-          <div class="metric-label">Connected</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Recent Logs</h2>
-      <div id="logs">
-        <div class="log-entry">
-          <span class="log-time">15:24</span> 
-          <span class="log-success">✓ Dashboard deployed via Dokku</span>
-        </div>
-        <div class="log-entry">
-          <span class="log-time">15:18</span> 
-          <span class="log-success">✓ Gmail API connected</span>
-        </div>
-        <div class="log-entry">
-          <span class="log-time">15:18</span> 
-          <span class="log-success">✓ Calendar API connected</span>
-        </div>
-        <div class="log-entry">
-          <span class="log-time">15:17</span> 
-          <span class="log-info">OAuth flow completed</span>
-        </div>
-        <div class="log-entry">
-          <span class="log-time">15:02</span> 
-          <span class="log-warn">⚠ OAuth redirect issues</span>
-        </div>
-        <div class="log-entry">
-          <span class="log-time">14:58</span> 
-          <span class="log-info">Started gog auth</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Memory</h2>
-      <div class="activity-item">
-        <div class="activity-desc">Projects: fitnito.com, wemble.com, michaelwood.com</div>
-      </div>
-      <div class="activity-item">
-        <div class="activity-desc">User: Michael Wood (Mike)</div>
-      </div>
-      <div class="activity-item">
-        <div class="activity-desc">Vibe: Garage-dwelling, whimsical, occasionally dark</div>
       </div>
     </div>
   </div>
 
-  <a href="../" class="back-link">← Back to Apps</a>
+  <!-- Dancing Robot -->
+  <div class="robot-container" onclick="jumpRobot()">
+    <div class="robot" id="dancer">🤖</div>
+  </div>
+
+  <a href="../" class="back-link">← Apps</a>
 
   <div class="footer">
-    Last updated: 2026-01-28 15:18 PST • Auto-refreshes every 30s
+    <span class="update-time">Last updated: <span id="last-updated">2026-01-28 15:28 PST</span></span>
+    <br>
+    Auto-refreshes every 30s
   </div>
 
   <script>
-    // Could fetch real status from an API endpoint
-    // For now, static with auto-refresh
-    console.log('GarageBot dashboard loaded');
+    // Update timestamp
+    function updateTimestamp() {
+      const now = new Date();
+      const pst = now.toLocaleString('en-US', {
+        timeZone: 'America/Vancouver',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      document.getElementById('last-updated').textContent = pst + ' PST';
+    }
+    updateTimestamp();
+    setInterval(updateTimestamp, 60000);
+
+    // Dancing robot interactions
+    function jumpRobot() {
+      const dancer = document.getElementById('dancer');
+      dancer.classList.add('jumping');
+      setTimeout(() => dancer.classList.remove('jumping'), 500);
+      
+      // Random robot emoji
+      const robots = ['🤖', '👾', '🦾', '🚀', '⚡'];
+      dancer.textContent = robots[Math.floor(Math.random() * robots.length)];
+      setTimeout(() => dancer.textContent = '🤖', 1000);
+    }
+
+    // Occasional dance change
+    setInterval(() => {
+      const dancer = document.getElementById('dancer');
+      const dances = ['dance', 'wiggle', 'bounce'];
+      // Could add different animation classes here
+    }, 5000);
+
+    console.log('GarageBot dashboard loaded 🤖');
   </script>
 </body>
 </html>
