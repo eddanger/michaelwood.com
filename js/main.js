@@ -19,7 +19,7 @@ const CREATURE_EMOJIS = ['🐛', '🐞', '🐜', '🦋', '🐝', '🐌', '🦗']
 let currentEmoji = '🐛';
 let eatenCount = 0;
 let creatureSize = 16;
-let defaultStreak = 0;
+
 
 // Get viewport dimensions
 function getViewportSize() {
@@ -109,7 +109,7 @@ function startCreatureMovement() {
       creature = null;
       eatenCount = 0;
       creatureSize = 16;
-      defaultStreak = 0;
+
     }
 
     keepCreatureInView();
@@ -230,8 +230,6 @@ function updateVisiblePixels() {
       // Set color from data or default
       const key = `${gridX},${gridY}`;
       let color = pixelData.get(key) || '#333';
-      let text = '';
-
       // Show creature
       if (creature && creature.x === gridX && creature.y === gridY) {
         // Make div larger for big creature
