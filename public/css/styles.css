@@ -3,7 +3,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
-  background: #78c8f0;
+  background: linear-gradient(#6db5e8 0%, #8fd3f4 45%, #c3ecfb 100%);
   font-family: "Courier New", ui-monospace, monospace;
   -webkit-user-select: none;
   user-select: none;

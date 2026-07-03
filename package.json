@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "wrangler": "^4.99.0"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
   }
 }

@@ -10,13 +10,15 @@ bones. The town hall clock shows your local time.
 
 ## Stack
 
+- Three.js voxel town rendered through a pixelation pipeline (low-res buffer,
+  nearest-neighbor upscale, orthographic iso camera) — real 3D, pixel-art look
 - Static assets + a small Worker (`src/worker.js`) on Cloudflare Workers
 - D1 (`michaelwood-wall`) stores graffiti strokes; see `migrations/`
 - No build step, no framework — vanilla ES modules in `public/js/`
-  - `town.js` — tile map, buildings, pre-rendered iso world, scenery animation
-  - `npc.js` — wandering citizens + dialogue
-  - `wall.js` — graffiti wall canvas, spray rendering, API client
-  - `main.js` — camera, input, HUD glue
+  - `gfx.js` — renderer/camera/picking · `data.js` — the town as data
+  - `painters.js` — canvas art that becomes textures (ground, facades, underground)
+  - `town3d.js` / `life3d.js` — static scene · living entities
+  - `wall.js` — graffiti wall (2D, shared via D1) · `main.js` — glue
 
 ## Dev
 
