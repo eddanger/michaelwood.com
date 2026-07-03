@@ -1,0 +1,35 @@
+/**
+ * Cloudflare Worker config — michaelwood.com (v4: Woodtown)
+ *
+ * Static assets in /public + a small Worker script (src/worker.js) that
+ * persists the shared graffiti wall in D1 (binding: DB).
+ *
+ * Requests that match a file in /public are served directly from assets;
+ * everything else (i.e. /api/*) falls through to the Worker.
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "michaelwood-com",
+	"main": "src/worker.js",
+	"compatibility_date": "2026-06-01",
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	"routes": [
+		{ "pattern": "michaelwood.com", "custom_domain": true },
+		{ "pattern": "www.michaelwood.com", "custom_domain": true }
+	],
+	"workers_dev": true,
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "michaelwood-wall",
+			"database_id": "12e97e32-847d-4841-8fff-5063a2368315",
+			"migrations_dir": "migrations"
+		}
+	],
+	"observability": {
+		"enabled": true
+	}
+}

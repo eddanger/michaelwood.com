@@ -1,0 +1,13 @@
+{
+  "name": "michaelwood-com",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.99.0"
+  }
+}

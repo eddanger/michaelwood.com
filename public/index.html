@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>michaelwood.com · Woodtown</title>
+  <meta name="description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏘️</text></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <canvas id="town"></canvas>
+
+  <div id="hud">
+    <div id="wordmark">
+      <h1>michaelwood<span>.com</span></h1>
+      <p>welcome to Woodtown &middot; pop. 1 + you</p>
+    </div>
+    <div id="hint">drag to wander &middot; scroll to zoom &middot; click people &amp; buildings</div>
+  </div>
+
+  <div id="bubble" hidden>
+    <button id="bubble-close" aria-label="close">&times;</button>
+    <div id="bubble-name"></div>
+    <div id="bubble-line"></div>
+    <div id="bubble-more">(click them again for more)</div>
+  </div>
+
+  <div id="plaque" hidden>
+    <button id="plaque-close" aria-label="close">&times;</button>
+    <h2 id="plaque-title"></h2>
+    <p id="plaque-body"></p>
+    <button id="plaque-action" hidden></button>
+  </div>
+
+  <div id="wall-mode" hidden>
+    <canvas id="wall-canvas"></canvas>
+    <div id="wall-top">
+      <button id="wall-back">&larr; back to town</button>
+      <div id="wall-title">THE WALL <span id="wall-count"></span></div>
+    </div>
+    <div id="wall-tools">
+      <div id="wall-colors"></div>
+      <div id="wall-sizes"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
