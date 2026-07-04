@@ -69,6 +69,8 @@ export const BUILDINGS = [
 		body: 'Tomatoes, flowers, and one suspiciously large pumpkin being grown for the fair. The fair is also not built yet.' },
 	{ id: 'tower', gx: 36, gy: 30, w: 2, d: 2, h: 3.4, kind: 'watertower', title: 'WOODTOWN WATER TOWER',
 		body: 'Est. whenever this domain was registered. Population: 1, plus you. Water quality: pixelated.' },
+	{ id: 'mine', gx: 21, gy: 46, w: 3, d: 3, h: 1.9, kind: 'mine', title: 'WOODTOWN MINE',
+		body: 'Deepest hole on any personal website. Mo works the seam — sandwiches go down, gold comes up. Do NOT lean over the hatch; the dragon considers that flirting.' },
 	{ id: 'boathouse', gx: 42, gy: 12, w: 3, d: 2, h: 1.25, kind: 'shop', wall: '#74a3c7', roof: '#5b88ab',
 		shop: { wall: '#74a3c7', signBg: '#274156', signFg: '#d7ecff', sign: 'BOATS', windows: 1 },
 		title: 'WOODTOWN BOAT RENTAL',
@@ -93,6 +95,10 @@ export const CITIZENS = [
 			'This whole town fits inside one email domain. Efficient governance.',
 			'The wall downtown? Fully legal. I signed the permit myself. For myself.',
 			'Vote for me! There is no election. Vote anyway.',
+			'Our GDP is measured in flowers planted per visitor. We’re booming.',
+			'I declared today a holiday. Also yesterday. Nobody stops me.',
+			'The sun sets every few minutes here. Keeps the budget meetings short.',
+			'I ran unopposed. The cat came second anyway. We don’t discuss it.',
 		] },
 	{ name: 'Penny the Painter', shirt: '#e0447c', skin: '#e8a87c', hat: '#1b2a4a', speed: 1.5,
 		lines: [
@@ -100,6 +106,9 @@ export const CITIZENS = [
 			'I ran out of teal today. A tragedy in three acts.',
 			'Paint something nice. Or weird. Weird is nice.',
 			'Every stroke fades eventually. Very deep, if you think about it. I try not to.',
+			'I once painted a door so real Walt knocked on it for an hour.',
+			'The sunset here? My best work. I do it live, every cycle.',
+			'Rain is just the sky finger-painting. Respect.',
 		] },
 	{ name: 'Pat the Postie', shirt: '#4d79c7', skin: '#c98d5e', hat: '#2f4a80', speed: 1.8,
 		lines: [
@@ -107,6 +116,9 @@ export const CITIZENS = [
 			'One inbox in this whole town, and it’s not even yours.',
 			'You’ve got mail! Not here, though. Somewhere else.',
 			'Somebody once mailed us a couch. We don’t talk about the couch.',
+			'I deliver at dawn and dusk. Around here that’s every ninety seconds.',
+			'The gnome under the hill gets more mail than the arcade. Make of that what you will.',
+			'Once delivered a letter to the mine. Mo read it by helmet-light. Beautiful moment.',
 		] },
 	{ name: 'Gus the Builder', shirt: '#f59f00', skin: '#e8a87c', hat: '#ffd43b', speed: 0.9,
 		lines: [
@@ -114,6 +126,9 @@ export const CITIZENS = [
 			'That arcade? Any day now. Any day. Aaaany day.',
 			'The crane doesn’t lift anything. It’s emotional support infrastructure.',
 			'There’s something under this town. We dug down once. We don’t do that anymore.',
+			'We poured the arcade foundation into the wrong lot. Twice. Same lot both times.',
+			'Mo keeps sending up buckets of gold. We keep sending down sandwiches. Fair trade.',
+			'Building code here is one sentence: “make it fun.” I’ve seen shorter. Never better.',
 		] },
 	{ name: 'Lil’ Dot', shirt: '#37b24d', skin: '#f3c19d', hair: '#8a5a33', small: true, speed: 2.3,
 		lines: [
@@ -121,6 +136,9 @@ export const CITIZENS = [
 			'I clicked the grass and a FLOWER grew!! Try it!!',
 			'When I grow up I wanna be a pixel artist. Or a duck.',
 			'There’s a DRAGON under the town!! Gus told me not to tell you. Oops.',
+			'At night the fireflies come out!! I named ALL of them. This one’s Greg!!',
+			'Mo the miner gave me a rock. It HUMS. Mom says put it back. Never!!',
+			'When it rains I count the drops. Yesterday: all of them!!',
 		] },
 	{ name: 'Fern the Gardener', shirt: '#2b8a3e', skin: '#c98d5e', hat: '#d9b382', speed: 1.0,
 		lines: [
@@ -128,6 +146,9 @@ export const CITIZENS = [
 			'The shrubs are load-bearing. Don’t ask.',
 			'Don’t feed the ducks bread. They prefer compliments.',
 			'The oaks remember everything. Anyway! Lovely weather.',
+			'Rain’s coming. The shrubs told me. The shrubs are never wrong.',
+			'I water every flower you people plant. Someone has to. I’m glad it’s me.',
+			'The gnome pays rent in mushrooms. Best tenant I’ve ever had.',
 		] },
 	{ name: 'Joan the Jogger', shirt: '#12b886', skin: '#f3c19d', hair: '#1b2a4a', speed: 3.4,
 		lines: [
@@ -135,6 +156,9 @@ export const CITIZENS = [
 			'The hills here are all isometric. Great for the calves.',
 			'Passed the UFO once. It waved.',
 			'Hydration tip: the fountain is NOT potable. The duck told me.',
+			'I run through rain, snow, and whatever Tuesday was.',
+			'Lap count resets at midnight. Midnight comes every three minutes. I stay humble.',
+			'The miner races me to the corner sometimes. He wins. Suspiciously fast for a man with a pickaxe.',
 		] },
 	{ name: 'Old Walt', shirt: '#845ef7', skin: '#e8a87c', hair: '#e9ecef', speed: 0.6,
 		lines: [
@@ -142,8 +166,23 @@ export const CITIZENS = [
 			'In my day the whole internet was this size. We liked it that way.',
 			'That fisherman’s been out there for years. Never caught a thing. Happiest man I know.',
 			'Listen close at the mineshaft. Something snores.',
+			'The moon here is square. Nobody else finds this alarming.',
+			'When it rains, the thing under the town purrs. Like a kettle. A big, warm kettle.',
+			'Knocked on a painted door for an hour once. Best door in town.',
 		] },
 ];
+
+export const MINER = {
+	name: 'Mo the Miner', shirt: '#a0693a', skin: '#c98d5e', hat: '#ffd43b',
+	lines: [
+		'Day 4,102. Still no bottom. The rock hums back now. Friendly, though.',
+		'The dragon? We have an arrangement. I don’t mine Tuesdays, she doesn’t flambé Wednesdays.',
+		'Union rules: I surface for lunch, sunsets, and UFOs.',
+		'Found a door down there with a question mark on it. Knocked. Something knocked BACK. Anyway, back to work.',
+		'The gold’s real. The economy isn’t. Balances out.',
+		'You hear snoring? That’s not me. I nap standing up, silently, like a professional.',
+	],
+};
 
 export const SPAWNS = [
 	[16, 27, 'x', 1], [13, 16, 'y', 1], [24, 11, 'x', -1], [29, 22, 'y', -1],

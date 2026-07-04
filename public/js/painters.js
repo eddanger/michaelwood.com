@@ -325,8 +325,9 @@ export function paintUnderground(eastFace) {
 			g.fillStyle = '#ffd43b';
 			g.fillRect(14, 1, 2, 2); g.fillRect(18, 1, 2, 2);
 		});
-		at(350, 20, () => { // mineshaft
+		at(350, 20, () => { // mineshaft — connects to the headframe on the surface
 			g.fillStyle = '#17110b';
+			g.fillRect(0, -20, 26, 20); // up to daylight
 			g.fillRect(0, 0, 26, 265);
 			g.fillStyle = '#141210';
 			g.fillRect(-110, 100, 110, 24);
@@ -350,6 +351,13 @@ export function paintUnderground(eastFace) {
 			g.fillRect(-90, 108, 4, 5);
 			g.fillStyle = 'rgba(255,181,46,0.18)';
 			g.beginPath(); g.ellipse(-88, 111, 16, 12, 0, 0, 7); g.fill();
+			// gold seams off the drifts
+			g.strokeStyle = '#ffd43b';
+			g.lineWidth = 2;
+			g.beginPath();
+			g.moveTo(140, 262); g.lineTo(152, 268); g.lineTo(148, 276); g.lineTo(162, 281);
+			g.moveTo(-80, 126); g.lineTo(-70, 132); g.lineTo(-74, 139);
+			g.stroke();
 		});
 		for (const [gu, gv, seed] of [[150, 190, 1], [620, 150, 2], [340, 350, 3]]) at(gu, gv, () => {
 			for (let i = 0; i < 5; i++) {
@@ -406,8 +414,32 @@ export function paintUnderground(eastFace) {
 				g.fillRect(38 + i * 6, -14 - i * 5, 3 + i, 3 + i);
 			}
 		});
+		at(490, 20, () => { // the gnome's front door, just under the lawn
+			g.fillStyle = '#6f4a28';
+			g.beginPath();
+			g.moveTo(-8, 16); g.lineTo(-8, 2);
+			g.quadraticCurveTo(0, -8, 8, 2);
+			g.lineTo(8, 16);
+			g.closePath(); g.fill();
+			g.strokeStyle = '#4e321a';
+			g.lineWidth = 1;
+			for (let px2 = -5; px2 <= 5; px2 += 3.3) { g.beginPath(); g.moveTo(px2, 15); g.lineTo(px2, -1 + Math.abs(px2) * 0.5); g.stroke(); }
+			g.fillStyle = '#ffd43b'; // warm lit window
+			g.beginPath(); g.arc(0, 3, 2.6, 0, 7); g.fill();
+			g.fillStyle = '#e8590c'; // doorknob
+			g.fillRect(5, 8, 1.6, 1.6);
+			g.fillStyle = '#8a2f2f'; // doormat
+			g.fillRect(-6, 16, 12, 2.4);
+			// mushrooms by the stoop
+			for (const [mx, mc] of [[-13, '#fa5252'], [12, '#e8fff3']]) {
+				g.fillStyle = '#f4e3c2';
+				g.fillRect(mx, 11, 1.8, 5);
+				g.fillStyle = mc;
+				g.fillRect(mx - 2, 8, 6, 3.4);
+			}
+		});
 	} else {
-		// ---- east face: pipe, treasure, worms, fossils, geode, door, duck
+		// ---- east face: pipe, treasure, worms, capsule, cabinet, geode, door, duck
 		at(120, 16, () => {
 			g.fillStyle = '#7d8590';
 			g.fillRect(-40, 0, 80, 7);
@@ -435,19 +467,63 @@ export function paintUnderground(eastFace) {
 			g.quadraticCurveTo(3, 5, 8, 0);
 			g.stroke();
 		});
-		at(490, 26, () => {
-			g.strokeStyle = '#d9c9a8';
-			g.lineWidth = 2;
-			for (let i = 0; i < 3; i++) {
-				g.beginPath(); g.arc(i * 1.5, 0, 9 - i * 3, i * 0.8, Math.PI * 1.7 + i * 0.5); g.stroke();
-			}
+		at(395, 46, () => { // WORM XING sign, obviously
+			g.fillStyle = '#8a5a33';
+			g.fillRect(-0.8, 0, 1.6, 12);
+			g.fillStyle = '#ffd43b';
+			g.save();
+			g.rotate(Math.PI / 4);
+			g.fillRect(-5.5, -5.5, 11, 11);
+			g.restore();
+			g.strokeStyle = '#1b2a4a';
+			g.lineWidth = 1.6;
+			g.beginPath();
+			g.moveTo(-3.5, 0.5); g.quadraticCurveTo(-1.5, -2.5, 0, 0.5); g.quadraticCurveTo(1.5, 3, 3.5, 0.5);
+			g.stroke();
 		});
-		at(300, 210, () => {
-			g.strokeStyle = '#c9b28e';
-			g.lineWidth = 3.5;
-			for (let i = 0; i < 5; i++) {
-				g.beginPath(); g.arc(i * 2.5, 0, 30 - i * 6, i * 0.7, Math.PI * 1.75 + i * 0.4); g.stroke();
+		at(150, 95, () => { // one (1) lost sock
+			g.fillStyle = '#e03131';
+			g.fillRect(-3, -8, 6, 10);
+			g.fillRect(-3, 2, 9, 5);
+			g.fillStyle = '#fff';
+			g.fillRect(-3, -8, 6, 2.4);
+			g.fillRect(-3, -3.5, 6, 1.6);
+		});
+		at(300, 210, () => { // Y2K time capsule
+			g.fillStyle = '#7d8590';
+			g.fillRect(-14, -9, 28, 18);
+			g.strokeStyle = '#4a525c';
+			g.lineWidth = 1.6;
+			g.strokeRect(-14, -9, 28, 18);
+			for (let i = 0; i < 4; i++) { // hazard stripes
+				g.fillStyle = i % 2 ? '#ffd43b' : '#1b2a4a';
+				g.fillRect(-14 + i * 7, -9, 7, 3);
 			}
+			g.fillStyle = '#ffd43b';
+			g.font = 'bold 7px monospace';
+			g.fillText('Y2K', -6, 3);
+			g.fillStyle = '#c9d2dc';
+			g.font = 'bold 3px monospace';
+			g.fillText('DO NOT OPEN', -9, 7);
+			g.fillText('(we forgot why)', -10.5, 10.8);
+		});
+		at(180, 250, () => { // arcade cabinet, in transit since 1998
+			g.fillStyle = '#5f3dc4';
+			g.fillRect(-10, -18, 20, 36);
+			g.fillStyle = '#3b2687';
+			g.fillRect(-10, -18, 20, 5);
+			g.fillStyle = '#12131a';
+			g.fillRect(-7, -11, 14, 11);
+			g.fillStyle = '#4dd4e8';
+			g.font = 'bold 7px monospace';
+			g.fillText('?', -2, -3.5);
+			g.fillStyle = '#e0447c'; // joystick + buttons
+			g.fillRect(-5, 3, 3, 3);
+			g.fillStyle = '#ffd43b';
+			g.fillRect(1, 4, 2.4, 2.4); g.fillRect(5, 3, 2.4, 2.4);
+			g.fillStyle = '#c9d2dc';
+			g.font = 'bold 3px monospace';
+			g.fillText('SHIPPED 1998', -9, 15);
 		});
 		at(660, 95, () => {
 			g.strokeStyle = '#cfc3ab';

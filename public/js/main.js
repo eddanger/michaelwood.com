@@ -12,7 +12,7 @@ const gfx = createGfx(canvas);
 
 const wall = createWall();
 const town = buildTown(gfx.scene, wall.canvas);
-const life = createLife(gfx.scene, town.anchors, wall);
+const life = createLife(gfx, town.anchors, wall);
 wall.load(); // fetch shared graffiti in the background
 
 const pickables = [...life.map((e) => e.obj), ...town.pickables];

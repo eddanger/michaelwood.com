@@ -4,10 +4,11 @@
 
 import { THREE } from './gfx.js';
 import {
-	CITIZENS, SPAWNS, CARS, LAKE, hash,
+	CITIZENS, SPAWNS, CARS, LAKE, MINER, hash, tileType,
 	ROAD_H_CENTERS, ROAD_V_CENTERS, ROAD_MIN, ROAD_MAX, GRID,
 } from './data.js';
 import { arcadeFacade, clockFace } from './painters.js';
+import { LAMP_SPOTS } from './town3d.js';
 
 const mat = (c, o = {}) => new THREE.MeshLambertMaterial({ color: c, ...o });
 const bmat = (c, o = {}) => new THREE.MeshBasicMaterial({ color: c, ...o });
@@ -97,6 +98,36 @@ class Walker extends Entity3D {
 	}
 }
 
+// shared voxel-person builder (citizens + the miner)
+function buildPerson(obj, data) {
+	const s = data.small ? 0.72 : 1;
+	const legGeo = new THREE.BoxGeometry(0.13, 0.36, 0.13);
+	legGeo.translate(0, -0.18, 0);
+	const legL = new THREE.Mesh(legGeo, mat('#2d3138'));
+	legL.position.set(-0.09, 0.36, 0);
+	legL.castShadow = true;
+	const legR = legL.clone();
+	legR.position.x = 0.09;
+	const torso = vox(0.42, 0.42, 0.26, mat(data.shirt), 0, 0.57, 0);
+	const head = vox(0.32, 0.3, 0.28, mat(data.skin), 0, 0.95, 0);
+	const eye1 = vox(0.05, 0.05, 0.03, bmat('#1b2a4a'), -0.07, 0.98, 0.15, false);
+	const eye2 = eye1.clone();
+	eye2.position.x = 0.07;
+	obj.add(legL, legR, torso, head, eye1, eye2);
+	if (data.tie) obj.add(vox(0.09, 0.26, 0.04, mat(data.tie), 0, 0.6, 0.14, false));
+	if (data.hat) {
+		obj.add(vox(0.4, 0.08, 0.36, mat(data.hat), 0, 1.13, 0, false));
+		obj.add(vox(0.26, 0.12, 0.24, mat(data.hat), 0, 1.2, 0, false));
+	} else if (data.hair) {
+		obj.add(vox(0.34, 0.1, 0.3, mat(data.hair), 0, 1.13, 0, false));
+	}
+	const dots = vox(0.4, 0.12, 0.08, bmat('#ffffff'), 0, 1.5, 0, false);
+	dots.visible = false;
+	obj.add(dots);
+	obj.scale.set(s, s, s);
+	return { legL, legR, dots };
+}
+
 // ---------------------------------------------------------------- citizens
 class Citizen extends Walker {
 	constructor(data, i) {
@@ -115,33 +146,10 @@ class Citizen extends Walker {
 	}
 
 	build() {
-		const s = this.small ? 0.72 : 1;
-		// legs pivot at the hip
-		const legGeo = new THREE.BoxGeometry(0.13, 0.36, 0.13);
-		legGeo.translate(0, -0.18, 0);
-		this.legL = new THREE.Mesh(legGeo, mat('#2d3138'));
-		this.legL.position.set(-0.09, 0.36, 0);
-		this.legL.castShadow = true;
-		this.legR = this.legL.clone();
-		this.legR.position.x = 0.09;
-		const torso = vox(0.42, 0.42, 0.26, mat(this.shirt), 0, 0.57, 0);
-		const head = vox(0.32, 0.3, 0.28, mat(this.skin), 0, 0.95, 0);
-		const eye1 = vox(0.05, 0.05, 0.03, bmat('#1b2a4a'), -0.07, 0.98, 0.15, false);
-		const eye2 = eye1.clone();
-		eye2.position.x = 0.07;
-		this.obj.add(this.legL, this.legR, torso, head, eye1, eye2);
-		if (this.tie) this.obj.add(vox(0.09, 0.26, 0.04, mat(this.tie), 0, 0.6, 0.14, false));
-		if (this.hat) {
-			this.obj.add(vox(0.4, 0.08, 0.36, mat(this.hat), 0, 1.13, 0, false));
-			this.obj.add(vox(0.26, 0.12, 0.24, mat(this.hat), 0, 1.2, 0, false));
-		} else if (this.hair) {
-			this.obj.add(vox(0.34, 0.1, 0.3, mat(this.hair), 0, 1.13, 0, false));
-		}
-		// chat indicator
-		this.dots = vox(0.4, 0.12, 0.08, bmat('#ffffff'), 0, 1.5, 0, false);
-		this.dots.visible = false;
-		this.obj.add(this.dots);
-		this.obj.scale.set(s, s, s);
+		const parts = buildPerson(this.obj, this);
+		this.legL = parts.legL;
+		this.legR = parts.legR;
+		this.dots = parts.dots;
 	}
 
 	animate(dt, t) {
@@ -301,6 +309,7 @@ class Clouds extends Entity3D {
 		this.obj.userData.pick = null;
 		this.clouds = [];
 		const cm = bmat('#ffffff', { transparent: true, opacity: 0.88 });
+		this.mat = cm; // Weather greys this out
 		for (let i = 0; i < 5; i++) {
 			const c = new THREE.Group();
 			for (let j = 0; j < 3; j++) {
@@ -576,12 +585,324 @@ class WallSync extends Entity3D {
 	}
 }
 
+// ---------------------------------------------------------------- the miner
+// Mo isn't road-bound: he putters around the headframe, then rides the
+// shaft down to work and comes back up for lunch/sunsets/UFOs.
+class Miner extends Entity3D {
+	constructor(mine, wheel) {
+		super();
+		this.mine = mine;
+		this.wheel = wheel;
+		const parts = buildPerson(this.obj, MINER);
+		this.legL = parts.legL;
+		this.legR = parts.legR;
+		this.dots = parts.dots;
+		// helmet lamp
+		this.obj.add(vox(0.1, 0.09, 0.05, bmat('#ffe680'), 0, 1.2, 0.17, false));
+		// pickaxe over the shoulder
+		const handle = vox(0.05, 0.7, 0.05, mat('#8a5a33'), 0.26, 0.75, -0.08, false);
+		handle.rotation.z = -0.5;
+		const headPick = vox(0.34, 0.08, 0.08, mat('#5e6673'), 0.42, 1.02, -0.08, false);
+		this.obj.add(handle, headPick);
+		this.x = mine.x;
+		this.z = mine.z + 0.8;
+		this.y = 0;
+		this.state = 'up';
+		this.stateUntil = 0;
+		this.target = null;
+		this.phase = 0;
+		this.frozen = false;
+		this.lineIdx = -1;
+	}
+
+	pickTarget() {
+		const a = Math.random() * Math.PI * 2, r = 0.8 + Math.random() * 1.6;
+		this.target = [this.mine.x + Math.cos(a) * r, Math.min(49, this.mine.z + 0.4 + Math.abs(Math.sin(a)) * r)];
+	}
+
+	update(dt, t) {
+		if (!this.stateUntil) {
+			this.stateUntil = t + 24000;
+			this.pickTarget();
+		}
+		const speed = 1.2;
+		if (this.state === 'up' && !this.frozen) {
+			if (t > this.stateUntil) {
+				this.state = 'toShaft';
+			} else if (this.target) {
+				const [tx, tz] = this.target;
+				const d = Math.hypot(tx - this.x, tz - this.z);
+				if (d < 0.1) {
+					if (Math.random() < 0.02) this.pickTarget();
+				} else {
+					this.x += ((tx - this.x) / d) * speed * dt;
+					this.z += ((tz - this.z) / d) * speed * dt;
+					this.phase += dt * 4;
+					this.obj.rotation.y = Math.atan2(tx - this.x, tz - this.z);
+				}
+			}
+		} else if (this.state === 'toShaft' && !this.frozen) {
+			const d = Math.hypot(this.mine.x - this.x, this.mine.z - this.z);
+			if (d < 0.12) {
+				this.state = 'descend';
+			} else {
+				this.x += ((this.mine.x - this.x) / d) * speed * dt;
+				this.z += ((this.mine.z - this.z) / d) * speed * dt;
+				this.phase += dt * 4;
+				this.obj.rotation.y = Math.atan2(this.mine.x - this.x, this.mine.z - this.z);
+			}
+		} else if (this.state === 'descend') {
+			this.y -= dt * 1.1;
+			if (this.wheel) this.wheel.rotation.z += dt * 4;
+			if (this.y <= -1.8) {
+				this.state = 'down';
+				this.obj.visible = false;
+				this.stateUntil = t + 14000 + Math.random() * 14000;
+			}
+		} else if (this.state === 'down') {
+			if (t > this.stateUntil) {
+				this.state = 'ascend';
+				this.obj.visible = true;
+			}
+		} else if (this.state === 'ascend') {
+			this.y += dt * 1.1;
+			if (this.wheel) this.wheel.rotation.z -= dt * 4;
+			if (this.y >= 0) {
+				this.y = 0;
+				this.state = 'up';
+				this.stateUntil = t + 20000 + Math.random() * 15000;
+				this.pickTarget();
+			}
+		}
+		this.obj.position.set(this.x, this.y, this.z);
+		const swing = (this.state === 'up' || this.state === 'toShaft') && !this.frozen ? Math.sin(this.phase * 6) * 0.5 : 0;
+		this.legL.rotation.x = swing;
+		this.legR.rotation.x = -swing;
+		this.dots.visible = this.frozen;
+	}
+
+	interact() {
+		if (!this.obj.visible) return null;
+		this.lineIdx = (this.lineIdx + 1) % MINER.lines.length;
+		return { name: MINER.name, line: MINER.lines[this.lineIdx], freeze: true };
+	}
+}
+
+// ---------------------------------------------------------------- sky cycle
+// A full day every 3 minutes: sun & square moon arc overhead, the sky
+// blushes at dusk, stars and fireflies come out, streetlamps glow.
+const DAY_MS = 180000;
+
+function mix3(a, b, k) {
+	return a.map((c, i) => {
+		const ca = new THREE.Color(c), cb = new THREE.Color(b[i]);
+		return '#' + ca.lerp(cb, k).getHexString();
+	});
+}
+
+class SkyCycle extends Entity3D {
+	constructor(gfx, weather) {
+		super();
+		this.obj.userData.pick = null;
+		this.gfx = gfx;
+		this.weather = weather;
+		this.offset = location.hash.includes('night') ? 0.62 : 0.06;
+		// celestial bodies (flat squares, as Walt insists)
+		this.sunMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), bmat('#ffd94a'));
+		this.moonMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), bmat('#e8ecf4'));
+		this.obj.add(this.sunMesh, this.moonMesh);
+		// stars
+		this.starMat = bmat('#ffffff', { transparent: true, opacity: 0 });
+		for (let i = 0; i < 70; i++) {
+			const s = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), this.starMat);
+			s.position.set(hash(i, 21) * 76 - 13, 11 + hash(i, 22) * 10, hash(i, 23) * 76 - 13);
+			this.obj.add(s);
+		}
+		// fireflies on grass
+		this.flies = [];
+		let placed = 0, tries = 0;
+		while (placed < 36 && tries < 400) {
+			const gx = Math.floor(hash(tries, 31) * GRID), gy = Math.floor(hash(tries, 32) * GRID);
+			tries++;
+			if (tileType(gx, gy) !== 0) continue;
+			const f = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), bmat('#ffe066'));
+			f.position.set(gx + hash(tries, 33), 0.5, gy + hash(tries, 34));
+			f.userData.seed = placed;
+			this.flies.push(f);
+			this.obj.add(f);
+			placed++;
+		}
+		// streetlamp halos
+		this.haloMat = bmat('#ffd43b', { transparent: true, opacity: 0 });
+		for (const [lx, lz] of LAMP_SPOTS) {
+			const h = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 6), this.haloMat);
+			h.position.set(lx, 1.28, lz);
+			this.obj.add(h);
+		}
+		this.palettes = {
+			day: ['#6db5e8', '#8fd3f4', '#c3ecfb'],
+			dusk: ['#3c4a7a', '#e88a6a', '#ffd9a0'],
+			night: ['#0b1030', '#17204a', '#2a3566'],
+		};
+	}
+
+	update(dt, t) {
+		const p = ((t / DAY_MS) + this.offset) % 1;
+		const a = p * Math.PI * 2;
+		const alt = Math.sin(a);
+		const f = THREE.MathUtils.smoothstep(alt, -0.12, 0.2); // daylight 0..1
+		const duskK = Math.max(0, 1 - Math.abs(alt) / 0.32) * (f > 0.02 ? 1 : 0.4);
+		const w = this.weather ? this.weather.light : 1;
+
+		const { sun, ambient } = this.gfx;
+		sun.intensity = (0.35 + 2.0 * f) * (0.5 + 0.5 * w);
+		ambient.intensity = (0.55 + 0.85 * f) * (0.6 + 0.4 * w);
+		const dayCol = new THREE.Color('#fff2d8');
+		const duskCol = new THREE.Color('#ffb36b');
+		const nightCol = new THREE.Color('#8fa8dc');
+		sun.color.copy(nightCol.lerp(dayCol, f).lerp(duskCol, duskK * 0.55));
+		// the light source swings around the town through the day
+		const la = a - Math.PI / 2;
+		sun.position.set(25 + Math.cos(la) * 24, 16 + Math.abs(alt) * 22, 8 + Math.sin(la) * 10);
+
+		// sky gradient
+		let cols = mix3(this.palettes.night, this.palettes.day, f);
+		cols = mix3(cols, this.palettes.dusk, duskK * 0.8);
+		if (w < 1) cols = mix3(cols, ['#5c6672', '#78828e', '#98a2ac'], (1 - w) * 0.8);
+		document.body.style.background = `linear-gradient(${cols[0]} 0%, ${cols[1]} 45%, ${cols[2]} 100%)`;
+
+		// celestial arc, behind the town from the camera's viewpoint
+		const R = { x: -0.707, z: 0.707 };
+		const place = (mesh, ang) => {
+			const y = 4 + Math.sin(ang) * 18;
+			mesh.position.set(6 + R.x * Math.cos(ang) * 30, y, 6 + R.z * Math.cos(ang) * 30);
+			mesh.visible = y > 1.5;
+			mesh.lookAt(mesh.position.x + 1, mesh.position.y + 0.7, mesh.position.z + 1);
+		};
+		place(this.sunMesh, a);
+		place(this.moonMesh, a + Math.PI);
+
+		this.starMat.opacity = (1 - f) * 0.9;
+		this.haloMat.opacity = (1 - f) * 0.4;
+		const nightK = 1 - THREE.MathUtils.smoothstep(alt, -0.15, 0.05);
+		for (const fly of this.flies) {
+			const k = Math.max(0, Math.sin(t / 420 + fly.userData.seed * 2.7)) * nightK;
+			fly.scale.setScalar(Math.max(0.001, k));
+			fly.position.y = 0.45 + Math.sin(t / 900 + fly.userData.seed) * 0.15;
+		}
+	}
+}
+
+// ---------------------------------------------------------------- weather
+// 80-second systems roll through: clear, cloudy, rain, the odd snowfall —
+// with a rainbow when rain clears in daylight.
+const WEATHER_MS = 80000;
+
+class Weather extends Entity3D {
+	constructor(cloudsEnt) {
+		super();
+		this.obj.userData.pick = null;
+		this.clouds = cloudsEnt;
+		this.light = 1;
+		this.forceRain = location.hash.includes('rain');
+		// rain pool
+		this.rain = new THREE.Group();
+		this.rainMat = bmat('#9fc6e8', { transparent: true, opacity: 0 });
+		for (let i = 0; i < 200; i++) {
+			const d = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.8, 0.09), this.rainMat);
+			this.resetDrop(d, true);
+			this.rain.add(d);
+		}
+		// snow pool
+		this.snow = new THREE.Group();
+		this.snowMat = bmat('#ffffff', { transparent: true, opacity: 0 });
+		for (let i = 0; i < 140; i++) {
+			const d = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), this.snowMat);
+			this.resetDrop(d, true);
+			this.snow.add(d);
+		}
+		this.obj.add(this.rain, this.snow);
+		// rainbow
+		const rc = document.createElement('canvas');
+		rc.width = 256; rc.height = 128;
+		const rg = rc.getContext('2d');
+		const bands = ['#fa5252', '#f76707', '#ffd43b', '#37b24d', '#4dabf7', '#845ef7'];
+		bands.forEach((c, i) => {
+			rg.strokeStyle = c;
+			rg.lineWidth = 7;
+			rg.beginPath();
+			rg.arc(128, 128, 112 - i * 7, Math.PI, 0);
+			rg.stroke();
+		});
+		const rt = new THREE.CanvasTexture(rc);
+		rt.colorSpace = THREE.SRGBColorSpace;
+		this.rainbowMat = new THREE.MeshBasicMaterial({ map: rt, transparent: true, opacity: 0, side: THREE.DoubleSide });
+		this.rainbow = new THREE.Mesh(new THREE.PlaneGeometry(20, 10), this.rainbowMat);
+		this.rainbow.position.set(14, 5.5, 14);
+		this.rainbow.rotation.y = Math.PI / 4;
+		this.obj.add(this.rainbow);
+	}
+
+	kindFor(cyc) {
+		if (this.forceRain) return 'rain';
+		const r = hash(cyc * 7 + 1, 313);
+		if (r < 0.5) return 'clear';
+		if (r < 0.72) return 'cloudy';
+		if (r < 0.93) return 'rain';
+		return 'snow';
+	}
+
+	resetDrop(d, anywhere) {
+		d.position.set(Math.random() * 54 - 2, anywhere ? Math.random() * 12 + 2 : 12 + Math.random() * 3, Math.random() * 54 - 2);
+	}
+
+	update(dt, t) {
+		const cyc = Math.floor(t / WEATHER_MS);
+		const into = (t % WEATHER_MS) / 1000;
+		const kind = this.kindFor(cyc);
+		const ramp = Math.min(1, into / 6, (WEATHER_MS / 1000 - into) / 6);
+
+		const targets = { clear: 1, cloudy: 0.78, rain: 0.55, snow: 0.72 };
+		this.light += ((1 - ramp) + targets[kind] * ramp - this.light) * Math.min(1, dt * 2);
+
+		if (this.clouds) {
+			const grey = kind === 'clear' ? 0 : ramp * (kind === 'cloudy' ? 0.5 : 0.75);
+			this.clouds.mat.color.lerpColors(new THREE.Color('#ffffff'), new THREE.Color('#8b95a5'), grey);
+		}
+
+		this.rainMat.opacity = kind === 'rain' ? ramp * 0.7 : 0;
+		this.snowMat.opacity = kind === 'snow' ? ramp * 0.95 : 0;
+		if (kind === 'rain') {
+			for (const d of this.rain.children) {
+				d.position.y -= dt * 17;
+				if (d.position.y < 0.2) this.resetDrop(d);
+			}
+		}
+		if (kind === 'snow') {
+			for (const d of this.snow.children) {
+				d.position.y -= dt * 1.7;
+				d.position.x += Math.sin(t / 700 + d.position.z) * dt * 0.7;
+				if (d.position.y < 0.1) this.resetDrop(d);
+			}
+		}
+
+		// rainbow: shows as a rain system clears in daylight
+		const prevWasRain = this.kindFor(cyc - 1) === 'rain' && !this.forceRain;
+		const rb = prevWasRain && into < 24 ? Math.min(1, into / 5, (24 - into) / 8) : 0;
+		this.rainbowMat.opacity = rb * 0.55 * this.light;
+	}
+}
+
 // ---------------------------------------------------------------- factory
-export function createLife(scene, anchors, wall) {
+export function createLife(gfx, anchors, wall) {
 	const list = [];
+	const clouds = new Clouds();
+	const weather = new Weather(clouds);
+	list.push(new SkyCycle(gfx, weather), weather);
 	CITIZENS.forEach((c, i) => list.push(new Citizen(c, i)));
 	CARS.forEach((c) => list.push(new Car(c)));
-	list.push(new Cat(), new Boat(), new DuckFamily(), new Clouds(), new Balloon(), new Birds(), new Ufo());
+	list.push(new Cat(), new Boat(), new DuckFamily(), clouds, new Balloon(), new Birds(), new Ufo());
+	if (anchors.mine) list.push(new Miner(anchors.mine, anchors.mineWheel));
 	if (anchors.chimney) list.push(new Smoke(anchors.chimney));
 	if (anchors.fountain) list.push(new FountainJet(anchors.fountain));
 	if (anchors.flag) list.push(new Flapper(anchors.flag));
@@ -590,6 +911,6 @@ export function createLife(scene, anchors, wall) {
 	if (anchors.arcadeCanvas) list.push(new MarqueeAnim(anchors.arcadeCanvas, anchors.arcadeTex));
 	if (anchors.clockCanvas) list.push(new ClockAnim(anchors.clockCanvas, anchors.clockTex));
 	if (anchors.wallTex) list.push(new WallSync(wall, anchors.wallTex));
-	for (const e of list) scene.add(e.obj);
+	for (const e of list) gfx.scene.add(e.obj);
 	return list;
 }

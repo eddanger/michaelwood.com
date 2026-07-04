@@ -61,8 +61,9 @@ export function createGfx(canvas) {
 	}
 	window.addEventListener('resize', resize);
 
-	// lights
-	scene.add(new THREE.AmbientLight('#cfe8ff', 1.35));
+	// lights (SkyCycle entity animates these through the day)
+	const ambient = new THREE.AmbientLight('#cfe8ff', 1.35);
+	scene.add(ambient);
 	const sun = new THREE.DirectionalLight('#fff2d8', 2.2);
 	sun.position.set(18, 40, 6);
 	sun.target.position.set(25, 0, 25);
@@ -138,5 +139,5 @@ export function createGfx(canvas) {
 	}
 
 	resize();
-	return { renderer, scene, camera, view, apply, panBy, zoomBy, clampView, pick, screenToGround, resize };
+	return { renderer, scene, camera, view, sun, ambient, apply, panBy, zoomBy, clampView, pick, screenToGround, resize };
 }

@@ -321,6 +321,58 @@ function buildKind(g, b, anchors, wallCanvas) {
 		return;
 	}
 
+	if (kind === 'mine') {
+		// headframe straddling the shaft (which reaches the south cliff face)
+		const MX = 22.7, MZ = 48.2;
+		const timber = mat('#6f4a28');
+		const hatch = boxMesh(1.1, 0.12, 1.1, new THREE.MeshBasicMaterial({ color: '#17110b' }), false);
+		hatch.position.set(MX, 0.06, MZ);
+		g.add(hatch);
+		for (const [dx, dz] of [[-0.65, -0.5], [0.65, -0.5], [-0.65, 0.5], [0.65, 0.5]]) {
+			const leg = boxMesh(0.14, 1.9, 0.14, timber);
+			leg.position.set(MX + dx, 0.95, MZ + dz);
+			leg.rotation.z = dx > 0 ? -0.18 : 0.18;
+			g.add(leg);
+		}
+		const cross = boxMesh(1.7, 0.14, 0.14, timber);
+		cross.position.set(MX, 1.85, MZ);
+		g.add(cross);
+		const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 10);
+		wheelGeo.rotateX(Math.PI / 2); // axis along z so rotation.z spins it
+		const wheel = new THREE.Mesh(wheelGeo, mat('#8a5a33'));
+		wheel.position.set(MX, 2.15, MZ);
+		wheel.castShadow = true;
+		g.add(wheel);
+		const rope = boxMesh(0.04, 1.9, 0.04, mat('#3e2c1c'), false);
+		rope.position.set(MX, 1, MZ);
+		g.add(rope);
+		anchors.mineWheel = wheel;
+		// MINE sign
+		const signCanvas = facade(2, 12, (g2) => {
+			g2.fillStyle = '#6f4a28';
+			g2.fillRect(0, 0, 32, 12);
+			g2.fillStyle = '#ffd43b';
+			g2.font = 'bold 7px monospace';
+			g2.fillText('MINE', 7, 9);
+		});
+		const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.5), matT(tex(signCanvas)));
+		sign.position.set(MX, 1.5, MZ + 0.56);
+		g.add(sign);
+		// ore pile + a lantern
+		for (const [ox, oz, oc] of [[-1.2, 0.9, '#5e6673'], [-0.9, 1.1, '#5e6673'], [-1.05, 0.75, '#ffd43b']]) {
+			const ore = boxMesh(0.28, 0.22, 0.28, mat(oc));
+			ore.position.set(MX + ox, 0.11, MZ + oz);
+			g.add(ore);
+		}
+		const post = boxMesh(0.08, 1, 0.08, mat('#3e2c1c'));
+		post.position.set(MX + 1.3, 0.5, MZ + 0.8);
+		const lantern = boxMesh(0.18, 0.22, 0.18, new THREE.MeshBasicMaterial({ color: '#ffb52e' }));
+		lantern.position.set(MX + 1.3, 1.05, MZ + 0.8);
+		g.add(post, lantern);
+		anchors.mine = { x: MX, z: MZ };
+		return;
+	}
+
 	if (kind === 'watertower') {
 		const legMat = mat('#5e6673');
 		for (const [lx, lz] of [[0.3, 0.3], [1.7, 0.3], [0.3, 1.7], [1.7, 1.7]]) {
@@ -346,7 +398,7 @@ function buildKind(g, b, anchors, wallCanvas) {
 }
 
 // ---------------------------------------------------------------- greenery
-const LAMP_SPOTS = [
+export const LAMP_SPOTS = [
 	[11.6, 9.6], [14.4, 12.4], [27.6, 9.6], [30.4, 12.4],
 	[11.6, 25.6], [14.4, 28.4], [27.6, 25.6], [30.4, 28.4],
 	[3, 12.4], [46, 9.6], [3, 28.4], [46, 25.6],
