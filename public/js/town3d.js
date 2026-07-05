@@ -92,6 +92,9 @@ export function buildTown(scene, wallCanvas) {
 		pickables.push(g);
 	}
 
+	// -------------------------------------------------- underground, in 3D
+	buildUnderground(root, anchors);
+
 	// ------------------------------------------------------------- trees
 	plantForest(root);
 	for (const [ox, oy] of OAKS) root.add(oakTree(ox + 0.5, oy + 0.5));
@@ -321,6 +324,65 @@ function buildKind(g, b, anchors, wallCanvas) {
 		return;
 	}
 
+	if (kind === 'dogpark') {
+		const post = mat('#8a5a33');
+		const railM = mat('#a06b3f');
+		// perimeter fence with a gap for the gate (south side, middle)
+		const step = 1;
+		for (let i = 0; i <= b.w; i += step) {
+			for (const [px, pz, skip] of [
+				[b.gx + i, b.gy, false],
+				[b.gx + i, b.gy + b.d, Math.abs(i - b.w / 2) < 0.6],
+				[b.gx, b.gy + Math.min(i, b.d), false],
+				[b.gx + b.w, b.gy + Math.min(i, b.d), false],
+			]) {
+				if (skip) continue;
+				const p = boxMesh(0.09, 0.55, 0.09, post);
+				p.position.set(px, 0.27, pz);
+				g.add(p);
+			}
+		}
+		for (const [rx, rz, rw, rd] of [
+			[b.gx + b.w / 2, b.gy, b.w, 0.06],
+			[b.gx + b.w / 2 - 1.3, b.gy + b.d, b.w - 2.6 < 0 ? 0 : b.w / 2 - 0.6, 0.06],
+			[b.gx + b.w / 2 + 1.3, b.gy + b.d, b.w / 2 - 0.6, 0.06],
+			[b.gx, b.gy + b.d / 2, 0.06, b.d],
+			[b.gx + b.w, b.gy + b.d / 2, 0.06, b.d],
+		]) {
+			if (!rw || !rd) continue;
+			const r = boxMesh(rw, 0.07, rd, railM, false);
+			r.position.set(rx, 0.44, rz);
+			g.add(r);
+		}
+		// ceremonial hydrant
+		const hyd = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 8), mat('#e03131'));
+		hyd.position.set(b.gx + 1, 0.25, b.gy + 1);
+		hyd.castShadow = true;
+		const hydCap = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.2, 8), mat('#c92a2a'));
+		hydCap.position.set(b.gx + 1, 0.58, b.gy + 1);
+		g.add(hyd, hydCap);
+		// water bowl
+		const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.2, 0.12, 8), mat('#4dabf7'));
+		bowl.position.set(b.gx + b.w - 1, 0.06, b.gy + 0.8);
+		g.add(bowl);
+		// sign over the gate
+		const signCanvas = facade(3, 12, (g2) => {
+			g2.fillStyle = '#8a5a33';
+			g2.fillRect(0, 0, 48, 12);
+			g2.fillStyle = '#ffe8cc';
+			g2.font = 'bold 6px monospace';
+			g2.fillText('DOG PARK', 7, 8.5);
+		});
+		const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.45), matT(tex(signCanvas)));
+		sign.position.set(b.gx + b.w / 2, 0.95, b.gy + b.d + 0.01);
+		const sp1 = boxMesh(0.08, 1.15, 0.08, post);
+		sp1.position.set(b.gx + b.w / 2 - 0.85, 0.57, b.gy + b.d);
+		const sp2 = sp1.clone();
+		sp2.position.x = b.gx + b.w / 2 + 0.85;
+		g.add(sign, sp1, sp2);
+		return;
+	}
+
 	if (kind === 'mine') {
 		// headframe straddling the shaft (which reaches the south cliff face)
 		const MX = 22.7, MZ = 48.2;
@@ -395,6 +457,172 @@ function buildKind(g, b, anchors, wallCanvas) {
 		g.add(tank, lid);
 		return;
 	}
+}
+
+// ------------------------------------------------------------ underground
+// 3D set-pieces mounted proud of the cross-section faces. South face props
+// sit at z ≈ 50.1 (x = painted-u/16, y = -v/16); east face at x ≈ 50.1.
+function buildUnderground(root, anchors) {
+	const g = new THREE.Group();
+	root.add(g);
+	const bone = mat('#e6dcc4');
+
+	// --- dinosaur skeleton (south face, by the old dig)
+	const dino = new THREE.Group();
+	const spine = boxMesh(3, 0.16, 0.16, bone, false);
+	spine.position.set(1.4, 0.35, 0);
+	dino.add(spine);
+	for (let i = 0; i < 5; i++) {
+		const rib = boxMesh(0.1, 0.75, 0.12, bone, false);
+		rib.position.set(0.5 + i * 0.45, -0.08, 0);
+		rib.rotation.z = 0.22;
+		dino.add(rib);
+	}
+	const skull = boxMesh(0.7, 0.5, 0.3, bone, false);
+	skull.position.set(-0.45, 0.28, 0);
+	const snout = boxMesh(0.45, 0.26, 0.26, bone, false);
+	snout.position.set(-0.9, 0.16, 0);
+	const socket = boxMesh(0.16, 0.16, 0.05, new THREE.MeshBasicMaterial({ color: '#3a2c1c' }), false);
+	socket.position.set(-0.5, 0.32, 0.16);
+	const tail1 = boxMesh(0.7, 0.13, 0.13, bone, false);
+	tail1.position.set(3.15, 0.5, 0);
+	tail1.rotation.z = 0.4;
+	const tail2 = boxMesh(0.5, 0.1, 0.1, bone, false);
+	tail2.position.set(3.65, 0.72, 0);
+	dino.add(skull, snout, socket, tail1, tail2);
+	for (const lx of [0.9, 2.1]) {
+		const leg = boxMesh(0.13, 0.6, 0.13, bone, false);
+		leg.position.set(lx, -0.55, 0);
+		const foot = boxMesh(0.4, 0.12, 0.16, bone, false);
+		foot.position.set(lx + 0.1, -0.85, 0);
+		dino.add(leg, foot);
+	}
+	dino.position.set(15.6, -2.6, 50.12);
+	g.add(dino);
+
+	// --- crystal cave crystals (south face) — CrystalGlow pulses these
+	anchors.crystals = [];
+	const crystalCols = ['#7ee8fa', '#b197fc', '#ff8fd0', '#7ee8fa'];
+	for (let i = 0; i < 4; i++) {
+		const c = new THREE.Mesh(
+			new THREE.ConeGeometry(0.16, 0.55 + (i % 2) * 0.25, 5),
+			new THREE.MeshBasicMaterial({ color: crystalCols[i], transparent: true })
+		);
+		c.position.set(34.2 + i * 0.55, -2.3, 50.14);
+		c.rotation.z = (i - 1.5) * 0.12;
+		anchors.crystals.push(c);
+		g.add(c);
+	}
+
+	// --- elevator cage in the shaft (south face) — ElevatorAnim rides it
+	const cage = new THREE.Group();
+	const cageFrame = boxMesh(1.1, 1.2, 0.18, mat('#8a6a3c'), false);
+	cageFrame.position.y = 0.6;
+	const cageFloor = boxMesh(1.2, 0.12, 0.24, mat('#6f4a28'), false);
+	const passenger = boxMesh(0.3, 0.55, 0.14, mat('#a0693a'), false);
+	passenger.position.set(0, 0.4, 0.02);
+	passenger.visible = false;
+	cage.add(cageFrame, cageFloor, passenger);
+	cage.position.set(22.7, -2, 50.08);
+	anchors.elevator = { cage, passenger };
+	g.add(cage);
+
+	// --- minecart on rails in the lower drift (south face) — CartAnim rolls it
+	const railY = -16.45, railZ = 50.1;
+	for (const dy of [0, 0.14]) {
+		const rail = boxMesh(8.2, 0.06, 0.06, mat('#6b5230'), false);
+		rail.position.set(27.6, railY - 0.28 + dy * 0, railZ + (dy ? 0.1 : -0.1));
+		g.add(rail);
+	}
+	const cart = new THREE.Group();
+	const tub = boxMesh(0.9, 0.5, 0.5, mat('#5e6673'), false);
+	tub.position.y = 0.25;
+	const oreA = boxMesh(0.25, 0.2, 0.25, new THREE.MeshBasicMaterial({ color: '#ffd43b' }), false);
+	oreA.position.set(-0.15, 0.55, 0);
+	const oreB = oreA.clone();
+	oreB.position.set(0.2, 0.5, 0.1);
+	const w1 = boxMesh(0.2, 0.2, 0.1, mat('#2b2523'), false);
+	w1.position.set(-0.28, -0.05, 0.2);
+	const w2 = w1.clone(); w2.position.x = 0.28;
+	cart.add(tub, oreA, oreB, w1, w2);
+	cart.position.set(25, railY, railZ);
+	anchors.minecart = cart;
+	g.add(cart);
+
+	// --- the gnome's front door (south face, just under the lawn)
+	const door = new THREE.Group();
+	const slab = boxMesh(0.8, 1, 0.12, mat('#6f4a28'), false);
+	slab.position.y = 0.5;
+	const arch = boxMesh(0.55, 0.28, 0.12, mat('#6f4a28'), false);
+	arch.position.y = 1.06;
+	const win = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.06, 8), new THREE.MeshBasicMaterial({ color: '#ffd43b' }));
+	win.rotation.x = Math.PI / 2;
+	win.position.set(0, 0.78, 0.08);
+	const knob = boxMesh(0.08, 0.08, 0.06, mat('#e8590c'), false);
+	knob.position.set(0.26, 0.45, 0.08);
+	const matDoor = boxMesh(0.7, 0.06, 0.3, mat('#8a2f2f'), false);
+	matDoor.position.set(0, 0.03, 0.24);
+	door.add(slab, arch, win, knob, matDoor);
+	for (const [mx, mc] of [[-0.75, '#fa5252'], [0.8, '#e8fff3']]) {
+		const stem = boxMesh(0.08, 0.3, 0.08, mat('#f4e3c2'), false);
+		stem.position.set(mx, 0.15, 0.1);
+		const cap = boxMesh(0.3, 0.14, 0.3, mat(mc), false);
+		cap.position.set(mx, 0.35, 0.1);
+		door.add(stem, cap);
+	}
+	door.position.set(30.6, -2.25, 50.1);
+	anchors.gnomeWindow = win;
+	g.add(door);
+
+	// --- the dragon (south face, deep) — DragonAnim breathes it
+	const dragon = new THREE.Group();
+	const dbody = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 1), mat('#232331'));
+	dbody.scale.set(1.5, 0.75, 0.7);
+	const dbelly = new THREE.Mesh(new THREE.IcosahedronGeometry(1.1, 1), mat('#2c2c40'));
+	dbelly.scale.set(1.2, 0.6, 0.6);
+	dbelly.position.set(0.4, -0.3, 0.15);
+	const dhead = new THREE.Mesh(new THREE.IcosahedronGeometry(0.75, 1), mat('#232331'));
+	dhead.scale.set(1.3, 0.8, 0.8);
+	dhead.position.set(2.3, 0.35, 0.2);
+	const dsnout = boxMesh(0.7, 0.35, 0.5, mat('#232331'), false);
+	dsnout.position.set(3.1, 0.2, 0.2);
+	const deye = boxMesh(0.28, 0.09, 0.06, new THREE.MeshBasicMaterial({ color: '#ff6b2e' }), false);
+	deye.position.set(2.55, 0.55, 0.62);
+	const dtail = new THREE.Group();
+	for (let i = 0; i < 4; i++) {
+		const seg = boxMesh(0.7 - i * 0.13, 0.4 - i * 0.07, 0.4 - i * 0.07, mat('#232331'), false);
+		seg.position.set(-1.8 - i * 0.55, 0.1 + i * 0.22, 0.1);
+		seg.rotation.z = i * 0.25;
+		dtail.add(seg);
+	}
+	dragon.add(dbody, dbelly, dhead, dsnout, deye, dtail);
+	for (let i = 0; i < 4; i++) {
+		const spike = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.5, 4), mat('#31314a'));
+		spike.position.set(-1 + i * 0.7, 0.95 - Math.abs(i - 1.5) * 0.1, 0.1);
+		dragon.add(spike);
+	}
+	dragon.position.set(35, -25, 50.6);
+	anchors.dragon = { group: dragon, body: dbody, eye: deye, snout: { x: 38.2, y: -24.7, z: 50.7 } };
+	g.add(dragon);
+
+	// --- treasure chest (east face)
+	const chest = new THREE.Group();
+	const base = boxMesh(1, 0.55, 0.45, mat('#8a5a33'), false);
+	base.position.y = 0.28;
+	const lid = boxMesh(1, 0.3, 0.45, mat('#6f4a28'), false);
+	lid.position.set(0, 0.68, -0.18);
+	lid.rotation.x = -0.9;
+	const band = boxMesh(0.14, 0.56, 0.47, mat('#ffd43b'), false);
+	band.position.y = 0.28;
+	chest.add(base, lid, band);
+	for (let i = 0; i < 5; i++) {
+		const coin = boxMesh(0.14, 0.1, 0.14, new THREE.MeshBasicMaterial({ color: '#ffd43b' }), false);
+		coin.position.set(-0.5 + hash(i, 8) * 1, 0.62 + hash(i, 9) * 0.1, hash(i, 12) * 0.2 - 0.1);
+		chest.add(coin);
+	}
+	chest.rotation.y = Math.PI / 2; // face east, out of the cliff
+	chest.position.set(50.12, -2.4, 50 - 230 / 16);
+	g.add(chest);
 }
 
 // ---------------------------------------------------------------- greenery

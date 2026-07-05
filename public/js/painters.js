@@ -298,30 +298,12 @@ export function paintUnderground(eastFace) {
 				g.stroke();
 			}
 		});
-		at(250, 40, () => {
-			g.strokeStyle = '#e6dcc4'; g.fillStyle = '#e6dcc4'; g.lineWidth = 2;
-			g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(24, -5, 46, 0); g.stroke();
-			g.lineWidth = 1.4;
-			for (let i = 0; i < 5; i++) { g.beginPath(); g.arc(9 + i * 7, -1, 5, 0.25, Math.PI - 0.4); g.stroke(); }
-			g.beginPath(); g.moveTo(46, 0); g.lineTo(56, -7); g.lineTo(64, -5); g.stroke();
-			g.fillRect(-16, -8, 13, 9); g.fillRect(-22, -4, 7, 5);
-			g.fillStyle = '#3a2c1c'; g.fillRect(-13, -6, 3, 3);
-			for (let i = 0; i < 3; i++) g.fillRect(-21 + i * 3, 0, 1.5, 2);
-			g.fillStyle = '#e6dcc4';
-			g.fillRect(6, 6, 2, 7); g.fillRect(30, 6, 2, 7);
-			g.fillRect(4, 12, 6, 2); g.fillRect(28, 12, 6, 2);
-		});
-		at(560, 28, () => {
+		// (dino bones, cave crystals, gnome door, dragon are 3D props now —
+		// town3d.buildUnderground mounts them on this face)
+		at(560, 28, () => { // cave mouth stays painted; crystals go 3D
 			g.fillStyle = '#151009';
 			g.beginPath(); g.ellipse(0, 6, 24, 15, 0, Math.PI, 0); g.fill();
 			g.fillRect(-24, 6, 48, 8);
-			for (let i = 0; i < 4; i++) {
-				g.fillStyle = i % 2 ? '#7ee8fa' : '#b197fc';
-				const cx2 = -14 + i * 9;
-				g.beginPath();
-				g.moveTo(cx2 - 3, 13); g.lineTo(cx2, 4 - (i % 2) * 3); g.lineTo(cx2 + 3, 13);
-				g.closePath(); g.fill();
-			}
 			g.fillStyle = '#ffd43b';
 			g.fillRect(14, 1, 2, 2); g.fillRect(18, 1, 2, 2);
 		});
@@ -392,52 +374,7 @@ export function paintUnderground(eastFace) {
 				g.fillRect(mx - 2, 11, 6, 3);
 			}
 		});
-		at(560, 400, () => { // dragon
-			g.fillStyle = '#232331';
-			g.beginPath(); g.ellipse(0, 0, 34, 13, 0, 0, 7); g.fill();
-			g.beginPath(); g.ellipse(26, -8, 12, 7, 0.4, 0, 7); g.fill();
-			g.beginPath();
-			g.moveTo(-32, 4); g.quadraticCurveTo(-48, 12, -40, -10); g.lineTo(-34, -6);
-			g.quadraticCurveTo(-42, 4, -30, 0);
-			g.closePath(); g.fill();
-			g.fillStyle = '#31314a';
-			for (let i = 0; i < 5; i++) {
-				const bx = -18 + i * 9;
-				g.beginPath();
-				g.moveTo(bx - 3, -10); g.lineTo(bx, -17 + (i % 2) * 2); g.lineTo(bx + 3, -10);
-				g.closePath(); g.fill();
-			}
-			g.fillStyle = '#ff6b2e';
-			g.fillRect(28, -9, 4, 1.6);
-			for (let i = 0; i < 3; i++) {
-				g.fillStyle = `rgba(180,180,200,${0.35 - i * 0.1})`;
-				g.fillRect(38 + i * 6, -14 - i * 5, 3 + i, 3 + i);
-			}
-		});
-		at(490, 20, () => { // the gnome's front door, just under the lawn
-			g.fillStyle = '#6f4a28';
-			g.beginPath();
-			g.moveTo(-8, 16); g.lineTo(-8, 2);
-			g.quadraticCurveTo(0, -8, 8, 2);
-			g.lineTo(8, 16);
-			g.closePath(); g.fill();
-			g.strokeStyle = '#4e321a';
-			g.lineWidth = 1;
-			for (let px2 = -5; px2 <= 5; px2 += 3.3) { g.beginPath(); g.moveTo(px2, 15); g.lineTo(px2, -1 + Math.abs(px2) * 0.5); g.stroke(); }
-			g.fillStyle = '#ffd43b'; // warm lit window
-			g.beginPath(); g.arc(0, 3, 2.6, 0, 7); g.fill();
-			g.fillStyle = '#e8590c'; // doorknob
-			g.fillRect(5, 8, 1.6, 1.6);
-			g.fillStyle = '#8a2f2f'; // doormat
-			g.fillRect(-6, 16, 12, 2.4);
-			// mushrooms by the stoop
-			for (const [mx, mc] of [[-13, '#fa5252'], [12, '#e8fff3']]) {
-				g.fillStyle = '#f4e3c2';
-				g.fillRect(mx, 11, 1.8, 5);
-				g.fillStyle = mc;
-				g.fillRect(mx - 2, 8, 6, 3.4);
-			}
-		});
+		// (the dragon sleeps in 3D now — see town3d.buildUnderground)
 	} else {
 		// ---- east face: pipe, treasure, worms, capsule, cabinet, geode, door, duck
 		at(120, 16, () => {
@@ -448,16 +385,7 @@ export function paintUnderground(eastFace) {
 			g.fillStyle = '#45b5ea';
 			g.fillRect(0, 9, 2, 3); g.fillRect(0.5, 15, 1.5, 2);
 		});
-		at(230, 34, () => {
-			g.fillStyle = '#8a5a33';
-			g.fillRect(-9, -6, 18, 12);
-			g.fillStyle = '#6f4a28';
-			g.beginPath(); g.ellipse(0, -6, 9, 4, 0, Math.PI, 0); g.fill();
-			g.fillStyle = '#ffd43b';
-			g.fillRect(-1.5, -6, 3, 12);
-			g.fillRect(-1, -3, 2, 3);
-			g.fillRect(-13, 5, 3, 2); g.fillRect(11, 3, 3, 2); g.fillRect(7, 7, 3, 2);
-		});
+		// (treasure chest is a 3D prop now)
 		for (const [wu, wv] of [[380, 60], [580, 45], [300, 130]]) at(wu, wv, () => {
 			g.strokeStyle = '#d98fa2';
 			g.lineWidth = 2.5;

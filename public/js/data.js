@@ -69,6 +69,8 @@ export const BUILDINGS = [
 		body: 'Tomatoes, flowers, and one suspiciously large pumpkin being grown for the fair. The fair is also not built yet.' },
 	{ id: 'tower', gx: 36, gy: 30, w: 2, d: 2, h: 3.4, kind: 'watertower', title: 'WOODTOWN WATER TOWER',
 		body: 'Est. whenever this domain was registered. Population: 1, plus you. Water quality: pixelated.' },
+	{ id: 'dogpark', gx: 33, gy: 34, w: 5, d: 4, h: 0.5, kind: 'dogpark', title: 'WOODTOWN DOG PARK',
+		body: 'All dogs are good dogs. The hydrant is ceremonial. Zoomies happen on no fixed schedule. The cat has opinions and files them from a safe distance.' },
 	{ id: 'mine', gx: 21, gy: 46, w: 3, d: 3, h: 1.9, kind: 'mine', title: 'WOODTOWN MINE',
 		body: 'Deepest hole on any personal website. Mo works the seam — sandwiches go down, gold comes up. Do NOT lean over the hatch; the dragon considers that flirting.' },
 	{ id: 'boathouse', gx: 42, gy: 12, w: 3, d: 2, h: 1.25, kind: 'shop', wall: '#74a3c7', roof: '#5b88ab',
@@ -171,6 +173,31 @@ export const CITIZENS = [
 			'Knocked on a painted door for an hour once. Best door in town.',
 		] },
 ];
+
+export const DOG_PARK = { x0: 33.5, z0: 34.5, x1: 37.5, z1: 37.4 };
+
+export const DOGS = [
+	{ name: 'Biscuit', col: '#c98d5e', ear: '#8a5a33', speed: 1.6 },
+	{ name: 'Pixel', col: '#2d3138', ear: '#fff', patch: '#fff', speed: 2.2 },
+	{ name: 'Sunny', col: '#e0a13d', ear: '#c9852e', speed: 1.3 },
+];
+export const DOG_LINES = [
+	'woof!',
+	'WOOF.',
+	'(happy tail noises)',
+	'(brought you a stick. it’s invisible. it’s the best stick.)',
+	'(smelled you from across town. you smell GREAT.)',
+];
+
+export const BUSKER = {
+	name: 'Six-String Sam', shirt: '#7048e8', skin: '#e8a87c', hat: '#3b2687',
+	lines: [
+		'Requests? I know one song. It’s this one.',
+		'The duck says I play flat. Everyone’s a critic.',
+		'Wrote this next one about the fountain. It’s the same song.',
+		'The fireflies keep time better than the drummer I don’t have.',
+	],
+};
 
 export const MINER = {
 	name: 'Mo the Miner', shirt: '#a0693a', skin: '#c98d5e', hat: '#ffd43b',

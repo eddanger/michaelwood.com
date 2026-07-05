@@ -5,6 +5,7 @@
 import { THREE } from './gfx.js';
 import {
 	CITIZENS, SPAWNS, CARS, LAKE, MINER, hash, tileType,
+	DOGS, DOG_LINES, DOG_PARK, BUSKER,
 	ROAD_H_CENTERS, ROAD_V_CENTERS, ROAD_MIN, ROAD_MAX, GRID,
 } from './data.js';
 import { arcadeFacade, clockFace } from './painters.js';
@@ -692,6 +693,14 @@ class Miner extends Entity3D {
 // A full day every 3 minutes: sun & square moon arc overhead, the sky
 // blushes at dusk, stars and fireflies come out, streetlamps glow.
 const DAY_MS = 180000;
+const DAY_OFFSET = location.hash.includes('night') ? 0.62 : 0.06;
+
+// shared clock: where are we in the 3-minute day?
+function dayPhase(t) {
+	const p = ((t / DAY_MS) + DAY_OFFSET) % 1;
+	const alt = Math.sin(p * Math.PI * 2);
+	return { p, alt, f: THREE.MathUtils.smoothstep(alt, -0.12, 0.2) };
+}
 
 function mix3(a, b, k) {
 	return a.map((c, i) => {
@@ -706,7 +715,6 @@ class SkyCycle extends Entity3D {
 		this.obj.userData.pick = null;
 		this.gfx = gfx;
 		this.weather = weather;
-		this.offset = location.hash.includes('night') ? 0.62 : 0.06;
 		// celestial bodies (flat squares, as Walt insists)
 		this.sunMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), bmat('#ffd94a'));
 		this.moonMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), bmat('#e8ecf4'));
@@ -747,10 +755,8 @@ class SkyCycle extends Entity3D {
 	}
 
 	update(dt, t) {
-		const p = ((t / DAY_MS) + this.offset) % 1;
+		const { p, alt, f } = dayPhase(t);
 		const a = p * Math.PI * 2;
-		const alt = Math.sin(a);
-		const f = THREE.MathUtils.smoothstep(alt, -0.12, 0.2); // daylight 0..1
 		const duskK = Math.max(0, 1 - Math.abs(alt) / 0.32) * (f > 0.02 ? 1 : 0.4);
 		const w = this.weather ? this.weather.light : 1;
 
@@ -893,6 +899,314 @@ class Weather extends Entity3D {
 	}
 }
 
+// -------------------------------------------------- underground animations
+class DragonAnim extends Entity3D {
+	constructor(a) {
+		super();
+		this.obj.userData.pick = null;
+		this.a = a;
+		this.embers = [];
+		for (let i = 0; i < 4; i++) {
+			const e = new THREE.Mesh(
+				new THREE.BoxGeometry(0.14, 0.14, 0.14),
+				new THREE.MeshBasicMaterial({ color: i % 2 ? '#ff8c2e' : '#ffb52e', transparent: true })
+			);
+			this.embers.push(e);
+			this.obj.add(e);
+		}
+	}
+	update(dt, t) {
+		const breathe = 1 + Math.sin(t / 1400) * 0.04;
+		this.a.body.scale.set(1.5 * breathe, 0.75 * breathe, 0.7);
+		this.a.eye.material.opacity = 1;
+		this.a.eye.scale.y = 0.4 + Math.max(0, Math.sin(t / 5200)) * 0.8; // slow blink
+		this.embers.forEach((e, i) => {
+			const k = ((t / 2200) + i / 4) % 1;
+			e.position.set(this.a.snout.x + k * 0.9, this.a.snout.y + k * 1.6, this.a.snout.z);
+			e.material.opacity = 0.8 * (1 - k);
+			const s = 0.6 + k;
+			e.scale.set(s, s, s);
+		});
+	}
+}
+
+class ElevatorAnim extends Entity3D {
+	constructor(a) {
+		super();
+		this.obj.userData.pick = null;
+		this.a = a;
+	}
+	update(dt, t) {
+		// long slow round trips; the passenger only rides sometimes
+		const k = (t % 26000) / 26000;
+		const y = -2 - Math.abs(Math.sin(k * Math.PI * 2)) * 13.5;
+		this.a.cage.position.y = y;
+		this.a.passenger.visible = Math.floor(t / 26000) % 2 === 0;
+	}
+}
+
+class CartAnim extends Entity3D {
+	constructor(cart) {
+		super();
+		this.obj.userData.pick = null;
+		this.cart = cart;
+	}
+	update(dt, t) {
+		const k = (t % 17000) / 17000;
+		const s = Math.sin(k * Math.PI * 2);
+		this.cart.position.x = 27.6 + s * 3.4;
+		this.cart.rotation.z = Math.cos(k * Math.PI * 2) * 0.02;
+	}
+}
+
+class CrystalGlow extends Entity3D {
+	constructor(crystals) {
+		super();
+		this.obj.userData.pick = null;
+		this.crystals = crystals;
+	}
+	update(dt, t) {
+		this.crystals.forEach((c, i) => {
+			c.material.opacity = 0.65 + Math.sin(t / 700 + i * 1.7) * 0.3;
+		});
+	}
+}
+
+// ---------------------------------------------------------------- fireworks
+// Shows after dark (and always with #fireworks). Rockets, bursts, oohs.
+class Fireworks extends Entity3D {
+	constructor() {
+		super();
+		this.obj.userData.pick = null;
+		this.force = location.hash.includes('fireworks');
+		this.pool = [];
+		for (let i = 0; i < 150; i++) {
+			const m = new THREE.Mesh(
+				new THREE.BoxGeometry(0.16, 0.16, 0.16),
+				new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0 })
+			);
+			m.visible = false;
+			this.pool.push({ mesh: m, vx: 0, vy: 0, vz: 0, life: 0, max: 1 });
+			this.obj.add(m);
+		}
+		this.rockets = [];
+		this.nextLaunch = 0;
+		this.cols = ['#ff5ea8', '#ffd43b', '#4dd4e8', '#8ce99a', '#b197fc', '#ff8c2e'];
+	}
+
+	spawn(x, y, z, col, vx, vy, vz, life) {
+		const p = this.pool.find((q) => q.life <= 0);
+		if (!p) return;
+		Object.assign(p, { vx, vy, vz, life, max: life });
+		p.mesh.position.set(x, y, z);
+		p.mesh.material.color.set(col);
+		p.mesh.visible = true;
+	}
+
+	update(dt, t) {
+		const { f } = dayPhase(t);
+		const showTime = this.force || (f < 0.25 && (t % 45000) < 14000);
+		if (showTime && t > this.nextLaunch) {
+			this.nextLaunch = t + 1100 + Math.random() * 1500;
+			this.rockets.push({
+				x: 12 + Math.random() * 26, z: 12 + Math.random() * 26,
+				y: 2, vy: 8 + Math.random() * 3,
+				burstY: 9 + Math.random() * 5,
+				col: this.cols[Math.floor(Math.random() * this.cols.length)],
+			});
+		}
+		for (const r of this.rockets) {
+			r.y += r.vy * dt;
+			if (Math.random() < 0.5) this.spawn(r.x, r.y - 0.3, r.z, '#fff3bf', 0, -1, 0, 0.35);
+			if (r.y >= r.burstY) {
+				r.dead = true;
+				for (let i = 0; i < 26; i++) {
+					const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+					const sp = 3.5 + Math.random() * 2.5;
+					this.spawn(r.x, r.y, r.z, r.col,
+						Math.sin(ph) * Math.cos(th) * sp, Math.cos(ph) * sp, Math.sin(ph) * Math.sin(th) * sp, 1.5);
+				}
+			}
+		}
+		this.rockets = this.rockets.filter((r) => !r.dead);
+		for (const p of this.pool) {
+			if (p.life <= 0) continue;
+			p.life -= dt;
+			p.vy -= 3.5 * dt;
+			p.mesh.position.x += p.vx * dt;
+			p.mesh.position.y += p.vy * dt;
+			p.mesh.position.z += p.vz * dt;
+			p.mesh.material.opacity = Math.max(0, p.life / p.max);
+			if (p.life <= 0) p.mesh.visible = false;
+		}
+	}
+}
+
+// ---------------------------------------------------------------- busker
+// Six-String Sam. Click to start the tune (WebAudio square-wave folk),
+// click again for another line — the song survives until you stop him.
+class Busker extends Entity3D {
+	constructor() {
+		super();
+		const parts = buildPerson(this.obj, BUSKER);
+		this.dots = parts.dots;
+		parts.legL.visible = parts.legR.visible = true;
+		// guitar
+		const gtr = vox(0.5, 0.34, 0.1, mat('#8a5a33'), 0.05, 0.5, 0.2, false);
+		gtr.rotation.z = -0.35;
+		const neck = vox(0.5, 0.07, 0.06, mat('#5c3a1e'), -0.3, 0.68, 0.2, false);
+		neck.rotation.z = -0.35;
+		this.obj.add(gtr, neck);
+		this.obj.position.set(10.3, 0, 23.2);
+		this.obj.rotation.y = 0.7;
+		// open guitar case with a coin
+		const kase = vox(0.6, 0.08, 0.34, mat('#3e2c1c'), 0.9, 0.04, 0.5, false);
+		const coin = vox(0.1, 0.05, 0.1, bmat('#ffd43b'), 0.85, 0.1, 0.5, false);
+		this.obj.add(kase, coin);
+		// floating notes
+		this.notes = [];
+		const nc = document.createElement('canvas');
+		nc.width = 32; nc.height = 32;
+		const ng = nc.getContext('2d');
+		ng.font = 'bold 26px monospace';
+		ng.fillStyle = '#1b2a4a';
+		ng.fillText('♪', 5, 26);
+		const ntex = new THREE.CanvasTexture(nc);
+		for (let i = 0; i < 3; i++) {
+			const n = new THREE.Mesh(
+				new THREE.PlaneGeometry(0.4, 0.4),
+				new THREE.MeshBasicMaterial({ map: ntex, transparent: true, opacity: 0 })
+			);
+			this.notes.push(n);
+			this.obj.add(n);
+		}
+		this.playing = false;
+		this.audio = null;
+		this.nextNote = 0;
+		this.step = 0;
+		this.lineIdx = -1;
+		// C major pentatonic ramble
+		this.tune = [0, 4, 7, 9, 7, 4, 12, 9, 7, 4, 0, 4, 7, 16, 12, 9];
+	}
+
+	startAudio() {
+		if (!this.audio) {
+			this.audio = new (window.AudioContext || window.webkitAudioContext)();
+			this.master = this.audio.createGain();
+			this.master.gain.value = 0.05;
+			this.master.connect(this.audio.destination);
+		}
+		this.audio.resume();
+	}
+
+	note(freq, when, dur, type = 'square', vol = 1) {
+		const o = this.audio.createOscillator();
+		const gn = this.audio.createGain();
+		o.type = type;
+		o.frequency.value = freq;
+		gn.gain.setValueAtTime(0.0001, when);
+		gn.gain.linearRampToValueAtTime(vol, when + 0.01);
+		gn.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+		o.connect(gn);
+		gn.connect(this.master);
+		o.start(when);
+		o.stop(when + dur + 0.05);
+	}
+
+	update(dt, t) {
+		// schedule ahead while playing
+		if (this.playing && this.audio) {
+			const now = this.audio.currentTime;
+			while (this.nextNote < now + 0.4) {
+				const semi = this.tune[this.step % this.tune.length];
+				const jitter = Math.random() < 0.12 ? 2 : 0;
+				this.note(261.6 * Math.pow(2, (semi + jitter + 12) / 12), this.nextNote, 0.22, 'square', 0.8);
+				if (this.step % 4 === 0) {
+					this.note(261.6 * Math.pow(2, (this.step % 8 === 0 ? 0 : 7) / 12) / 2, this.nextNote, 0.4, 'triangle', 1.2);
+				}
+				this.nextNote += 0.24;
+				this.step++;
+			}
+		}
+		this.notes.forEach((n, i) => {
+			const k = ((t / 2400) + i / 3) % 1;
+			n.position.set(0.4 + Math.sin(k * 5 + i) * 0.2, 1.3 + k * 1.2, 0.2);
+			n.material.opacity = this.playing ? Math.min(1, (1 - k) * 1.5) * 0.9 : 0;
+			n.lookAt(n.position.x + 1, n.position.y + 0.7, n.position.z + 1);
+		});
+		this.obj.rotation.z = this.playing ? Math.sin(t / 260) * 0.03 : 0;
+	}
+
+	interact() {
+		this.startAudio();
+		this.playing = !this.playing;
+		if (this.playing && this.audio) this.nextNote = this.audio.currentTime + 0.05;
+		this.lineIdx = (this.lineIdx + 1) % BUSKER.lines.length;
+		const status = this.playing ? ' 🎵' : ' (…and that’s the set. click for an encore.)';
+		return { name: BUSKER.name, line: BUSKER.lines[this.lineIdx] + status };
+	}
+}
+
+// ---------------------------------------------------------------- dogs
+class Dog extends Entity3D {
+	constructor(cfg, i) {
+		super();
+		this.cfg = cfg;
+		const c = mat(cfg.col);
+		this.obj.add(vox(0.26, 0.24, 0.55, c, 0, 0.26, 0));
+		this.obj.add(vox(0.26, 0.26, 0.24, c, 0, 0.42, 0.35));
+		this.obj.add(vox(0.14, 0.12, 0.14, mat(cfg.patch || cfg.col), 0, 0.36, 0.5, false)); // snout
+		this.obj.add(vox(0.08, 0.14, 0.06, mat(cfg.ear), -0.09, 0.58, 0.32, false));
+		this.obj.add(vox(0.08, 0.14, 0.06, mat(cfg.ear), 0.09, 0.58, 0.32, false));
+		this.tail = vox(0.07, 0.07, 0.26, c, 0, 0.34, -0.38, false);
+		this.obj.add(this.tail);
+		this.legs = [];
+		for (const [lx, lz] of [[-0.09, 0.2], [0.09, 0.2], [-0.09, -0.2], [0.09, -0.2]]) {
+			const leg = vox(0.09, 0.16, 0.09, c, lx, 0.08, lz, false);
+			this.legs.push(leg);
+			this.obj.add(leg);
+		}
+		this.x = DOG_PARK.x0 + hash(i, 1) * (DOG_PARK.x1 - DOG_PARK.x0);
+		this.z = DOG_PARK.z0 + hash(i, 2) * (DOG_PARK.z1 - DOG_PARK.z0);
+		this.pickTarget();
+		this.zoomUntil = 0;
+		this.restUntil = 0;
+	}
+
+	pickTarget() {
+		this.tx = DOG_PARK.x0 + Math.random() * (DOG_PARK.x1 - DOG_PARK.x0);
+		this.tz = DOG_PARK.z0 + Math.random() * (DOG_PARK.z1 - DOG_PARK.z0);
+	}
+
+	update(dt, t) {
+		const zooming = t < this.zoomUntil;
+		const resting = t < this.restUntil;
+		if (!resting) {
+			const speed = this.cfg.speed * (zooming ? 3.2 : 1);
+			const d = Math.hypot(this.tx - this.x, this.tz - this.z);
+			if (d < 0.15) {
+				const r = Math.random();
+				if (r < 0.18) this.zoomUntil = t + 2600; // ZOOMIES
+				else if (r < 0.45) this.restUntil = t + 1500 + Math.random() * 2500;
+				this.pickTarget();
+			} else {
+				this.x += ((this.tx - this.x) / d) * speed * dt;
+				this.z += ((this.tz - this.z) / d) * speed * dt;
+				this.obj.rotation.y = Math.atan2(this.tx - this.x, this.tz - this.z);
+			}
+		}
+		this.obj.position.set(this.x, 0, this.z);
+		const wag = Math.sin(t / (zooming ? 60 : 160)) * 0.5;
+		this.tail.rotation.y = wag;
+		const step = resting ? 0 : Math.sin(t / (zooming ? 50 : 110)) * 0.05;
+		this.legs.forEach((l, i2) => { l.position.y = 0.08 + (i2 % 2 ? step : -step); });
+	}
+
+	interact() {
+		return { name: this.cfg.name, line: DOG_LINES[Math.floor(Math.random() * DOG_LINES.length)] };
+	}
+}
+
 // ---------------------------------------------------------------- factory
 export function createLife(gfx, anchors, wall) {
 	const list = [];
@@ -902,7 +1216,13 @@ export function createLife(gfx, anchors, wall) {
 	CITIZENS.forEach((c, i) => list.push(new Citizen(c, i)));
 	CARS.forEach((c) => list.push(new Car(c)));
 	list.push(new Cat(), new Boat(), new DuckFamily(), clouds, new Balloon(), new Birds(), new Ufo());
+	list.push(new Fireworks(), new Busker());
+	DOGS.forEach((d, i) => list.push(new Dog(d, i)));
 	if (anchors.mine) list.push(new Miner(anchors.mine, anchors.mineWheel));
+	if (anchors.dragon) list.push(new DragonAnim(anchors.dragon));
+	if (anchors.elevator) list.push(new ElevatorAnim(anchors.elevator));
+	if (anchors.minecart) list.push(new CartAnim(anchors.minecart));
+	if (anchors.crystals) list.push(new CrystalGlow(anchors.crystals));
 	if (anchors.chimney) list.push(new Smoke(anchors.chimney));
 	if (anchors.fountain) list.push(new FountainJet(anchors.fountain));
 	if (anchors.flag) list.push(new Flapper(anchors.flag));
