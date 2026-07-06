@@ -33,13 +33,13 @@ export function createGfx(canvas) {
 	const view = { tx: 25, ty: 0.5, tz: 25, span: 15, min: 5, max: 44 };
 	const R = new THREE.Vector3(), U = new THREE.Vector3();
 
-	// Render grain adapts to zoom: chunky pixels up close, finer when zoomed
-	// out so the whole town stays legible instead of dissolving into mush.
+	// Render grain adapts to zoom: past the default view the world-space pixel
+	// density stays constant, so pulling back never looks chunkier than the
+	// landing view — the town just gets smaller. Zooming in keeps big pixels.
 	function pixelSize() {
-		if (window.innerWidth < 700) return 2; // phones are fine-grained already
-		if (view.span > 30) return 2;
-		if (view.span > 21) return 3;
-		return PIXEL;
+		const base = window.innerWidth < 700 ? 2 : PIXEL;
+		const px = Math.min(base, base * 15 / view.span);
+		return Math.max(1, Math.round(px * 4) / 4); // quarter steps limit rebuilds
 	}
 
 	let curPx = 0;
