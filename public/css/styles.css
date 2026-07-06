@@ -20,12 +20,28 @@ canvas#town {
 }
 canvas#town.dragging { cursor: grabbing; }
 
+/* tilt-shift: blur the top & bottom of the frame when zoomed way out, so the
+   town reads as a miniature. Opacity is driven from gfx.js by zoom level. */
+#tiltshift {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(2.5px) saturate(1.25);
+  -webkit-backdrop-filter: blur(2.5px) saturate(1.25);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 38%, transparent 62%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 38%, transparent 62%, black 100%);
+}
+
 #hud { pointer-events: none; }
 
 #wordmark {
   position: fixed;
   top: 14px;
   left: 16px;
+  z-index: 5; /* above the tilt-shift blur */
   color: #1b2a4a;
   text-shadow: 0 2px 0 rgba(255, 255, 255, 0.55);
 }
@@ -40,6 +56,7 @@ canvas#town.dragging { cursor: grabbing; }
   position: fixed;
   bottom: max(12px, env(safe-area-inset-bottom));
   left: 50%;
+  z-index: 5; /* above the tilt-shift blur */
   transform: translateX(-50%);
   font-size: 11px;
   color: #1b2a4a;

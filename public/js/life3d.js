@@ -690,12 +690,13 @@ class Miner extends Entity3D {
 }
 
 // ---------------------------------------------------------------- sky cycle
-// A full day every 3 minutes: sun & square moon arc overhead, the sky
-// blushes at dusk, stars and fireflies come out, streetlamps glow.
-const DAY_MS = 180000;
+// A full day every 8 minutes: sun & square moon arc overhead, the sky
+// blushes at dusk, stars and fireflies come out, streetlamps glow. Kept slow
+// so shadows creep rather than sweep.
+const DAY_MS = 480000;
 const DAY_OFFSET = location.hash.includes('night') ? 0.62 : 0.06;
 
-// shared clock: where are we in the 3-minute day?
+// shared clock: where are we in the day?
 function dayPhase(t) {
 	const p = ((t / DAY_MS) + DAY_OFFSET) % 1;
 	const alt = Math.sin(p * Math.PI * 2);

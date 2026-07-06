@@ -7,9 +7,10 @@
 import * as THREE from './vendor/three.module.min.js';
 export { THREE };
 
-export const PIXEL = 4; // screen px per rendered px
+export const PIXEL = 4; // screen px per rendered px, at street-level zoom
 
 export function createGfx(canvas) {
+	const tilt = document.getElementById('tiltshift');
 	const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true });
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.BasicShadowMap; // hard, chunky, pixel-y
@@ -32,7 +33,31 @@ export function createGfx(canvas) {
 	const view = { tx: 25, ty: 0.5, tz: 25, span: 15, min: 5, max: 44 };
 	const R = new THREE.Vector3(), U = new THREE.Vector3();
 
+	// Render grain adapts to zoom: chunky pixels up close, finer when zoomed
+	// out so the whole town stays legible instead of dissolving into mush.
+	function pixelSize() {
+		if (window.innerWidth < 700) return 2; // phones are fine-grained already
+		if (view.span > 30) return 2;
+		if (view.span > 21) return 3;
+		return PIXEL;
+	}
+
+	let curPx = 0;
+	function syncBuffer() {
+		const px = pixelSize();
+		if (px === curPx) return;
+		curPx = px;
+		renderer.setSize(
+			Math.max(2, Math.floor(window.innerWidth / px)),
+			Math.max(2, Math.floor(window.innerHeight / px)),
+			false
+		);
+		canvas.style.width = '100%';
+		canvas.style.height = '100%';
+	}
+
 	function apply() {
+		syncBuffer();
 		const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
 		camera.left = -view.span * aspect;
 		camera.right = view.span * aspect;
@@ -48,15 +73,12 @@ export function createGfx(canvas) {
 		camera.updateProjectionMatrix();
 		R.setFromMatrixColumn(camera.matrix, 0);
 		U.setFromMatrixColumn(camera.matrix, 1);
+		// tilt-shift fades in as you pull back — miniature-town effect
+		if (tilt) tilt.style.opacity = Math.min(1, Math.max(0, (view.span - 17) / 15)).toFixed(2);
 	}
 
 	function resize() {
-		const px = window.innerWidth < 700 ? 2 : PIXEL; // finer grain on phones
-		const w = Math.max(2, Math.floor(window.innerWidth / px));
-		const h = Math.max(2, Math.floor(window.innerHeight / px));
-		renderer.setSize(w, h, false);
-		canvas.style.width = '100%';
-		canvas.style.height = '100%';
+		curPx = 0; // force a buffer rebuild at the new window size
 		apply();
 	}
 	window.addEventListener('resize', resize);

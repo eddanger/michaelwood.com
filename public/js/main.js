@@ -159,6 +159,10 @@ function enterWall() {
 }
 
 if (location.hash === '#wall') enterWall();
+if (location.hash === '#far') {
+	gfx.view.span = 40;
+	gfx.apply();
+}
 if (location.hash === '#underground') {
 	gfx.view.ty = -16;
 	gfx.view.span = 22;

@@ -159,7 +159,7 @@ export const CITIZENS = [
 			'Passed the UFO once. It waved.',
 			'Hydration tip: the fountain is NOT potable. The duck told me.',
 			'I run through rain, snow, and whatever Tuesday was.',
-			'Lap count resets at midnight. Midnight comes every three minutes. I stay humble.',
+			'Lap count resets at midnight. Midnight comes every eight minutes. I stay humble.',
 			'The miner races me to the corner sometimes. He wins. Suspiciously fast for a man with a pickaxe.',
 		] },
 	{ name: 'Old Walt', shirt: '#845ef7', skin: '#e8a87c', hair: '#e9ecef', speed: 0.6,
