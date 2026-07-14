@@ -72,4 +72,3 @@ Default is `garagebot123` (change this!).
 | memory_update | Update memory files |
 | git_status | Check project git status |
 | system_info | Get system uptime/load |
-| web_search | Search the web |
