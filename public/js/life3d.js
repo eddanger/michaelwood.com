@@ -5,10 +5,11 @@
 import { THREE } from './gfx.js';
 import {
 	CITIZENS, SPAWNS, CARS, LAKE, MINER, hash, tileType,
-	DOGS, DOG_LINES, DOG_PARK, BUSKER,
+	DOGS, DOG_LINES, DOG_PARK, BUSKER, HOTDOG, ROOF_GUY, SANDWICH,
 	ROAD_H_CENTERS, ROAD_V_CENTERS, ROAD_MIN, ROAD_MAX, GRID,
+	WISHES, FIREFLY_NAMES, BUTTERFLY_LINES, PLANE_LINES,
 } from './data.js';
-import { arcadeFacade, clockFace } from './painters.js';
+import { arcadeFacade, clockFace, FACADE_SCALE } from './painters.js';
 import { LAMP_SPOTS } from './town3d.js';
 
 const mat = (c, o = {}) => new THREE.MeshLambertMaterial({ color: c, ...o });
@@ -100,6 +101,7 @@ class Walker extends Entity3D {
 }
 
 // shared voxel-person builder (citizens + the miner)
+// lots of optional pixel accessories for eBoy-style close-ups
 function buildPerson(obj, data) {
 	const s = data.small ? 0.72 : 1;
 	const legGeo = new THREE.BoxGeometry(0.13, 0.36, 0.13);
@@ -114,13 +116,41 @@ function buildPerson(obj, data) {
 	const eye1 = vox(0.05, 0.05, 0.03, bmat('#1b2a4a'), -0.07, 0.98, 0.15, false);
 	const eye2 = eye1.clone();
 	eye2.position.x = 0.07;
-	obj.add(legL, legR, torso, head, eye1, eye2);
+	// cheek pixels + mouth — free density when zoomed in
+	const cheekL = vox(0.04, 0.03, 0.02, bmat('#f5a9a9'), -0.11, 0.92, 0.14, false);
+	const cheekR = cheekL.clone();
+	cheekR.position.x = 0.11;
+	const mouth = vox(0.08, 0.03, 0.02, bmat('#8a4a3a'), 0, 0.88, 0.14, false);
+	obj.add(legL, legR, torso, head, eye1, eye2, cheekL, cheekR, mouth);
 	if (data.tie) obj.add(vox(0.09, 0.26, 0.04, mat(data.tie), 0, 0.6, 0.14, false));
 	if (data.hat) {
 		obj.add(vox(0.4, 0.08, 0.36, mat(data.hat), 0, 1.13, 0, false));
 		obj.add(vox(0.26, 0.12, 0.24, mat(data.hat), 0, 1.2, 0, false));
 	} else if (data.hair) {
 		obj.add(vox(0.34, 0.1, 0.3, mat(data.hair), 0, 1.13, 0, false));
+		// side bangs / volume
+		obj.add(vox(0.08, 0.14, 0.08, mat(data.hair), -0.16, 1.05, 0.05, false));
+		obj.add(vox(0.08, 0.14, 0.08, mat(data.hair), 0.16, 1.05, 0.05, false));
+	}
+	if (data.pack) {
+		obj.add(vox(0.28, 0.32, 0.16, mat('#343a40'), 0, 0.6, -0.2, false));
+		obj.add(vox(0.12, 0.08, 0.06, bmat('#ffd43b'), 0, 0.72, -0.28, false)); // logo pixel
+	}
+	if (data.camera) {
+		obj.add(vox(0.16, 0.12, 0.1, mat('#2d3138'), 0.22, 0.55, 0.18, false));
+		obj.add(vox(0.08, 0.08, 0.04, bmat('#4dabf7'), 0.22, 0.55, 0.24, false));
+	}
+	if (data.neon) {
+		// glowing belt buckle
+		obj.add(vox(0.14, 0.06, 0.05, bmat('#ff5ea8'), 0, 0.42, 0.14, false));
+	}
+	if (data.skate) {
+		const board = vox(0.22, 0.06, 0.7, mat('#1b2a4a'), 0, 0.05, 0, false);
+		obj.add(board);
+		obj.add(vox(0.08, 0.05, 0.08, mat('#e03131'), -0.06, 0.02, 0.22, false));
+		obj.add(vox(0.08, 0.05, 0.08, mat('#e03131'), 0.06, 0.02, 0.22, false));
+		obj.add(vox(0.08, 0.05, 0.08, mat('#e03131'), -0.06, 0.02, -0.22, false));
+		obj.add(vox(0.08, 0.05, 0.08, mat('#e03131'), 0.06, 0.02, -0.22, false));
 	}
 	const dots = vox(0.4, 0.12, 0.08, bmat('#ffffff'), 0, 1.5, 0, false);
 	dots.visible = false;
@@ -154,9 +184,14 @@ class Citizen extends Walker {
 	}
 
 	animate(dt, t) {
-		const swing = this.idle ? 0 : Math.sin(this.phase * 6) * 0.55;
+		const skate = !!this.skate;
+		const swing = this.idle ? 0 : Math.sin(this.phase * (skate ? 10 : 6)) * (skate ? 0.25 : 0.55);
 		this.legL.rotation.x = swing;
 		this.legR.rotation.x = -swing;
+		// skate lean / courier bounce / tourist bob
+		if (skate && !this.idle) this.obj.rotation.z = Math.sin(this.phase * 4) * 0.12;
+		else if (this.pack && !this.idle) this.obj.position.y = Math.abs(Math.sin(this.phase * 5)) * 0.04;
+		else this.obj.rotation.z = 0;
 		this.dots.visible = this.frozen;
 		if (this.frozen) this.dots.position.y = 1.5 + Math.sin(t / 300) * 0.04;
 	}
@@ -199,6 +234,7 @@ class Cat extends Walker {
 }
 
 // ---------------------------------------------------------------- cars
+// silhouettes vary by kind — eBoy treats every vehicle as a character
 class Car extends Walker {
 	constructor(cfg) {
 		const [u0, line0, axis, dir] = cfg.spawn;
@@ -208,19 +244,68 @@ class Car extends Walker {
 			line: axis === 'x' ? line0 : u0,
 			dir,
 			speed: cfg.speed,
-			lane: 0.4,
+			lane: cfg.kind === 'scooter' ? 0.55 : 0.4,
 		});
-		this.obj.add(vox(0.55, 0.26, 1.1, mat(cfg.body), 0, 0.3, 0));
-		this.obj.add(vox(0.48, 0.24, 0.55, mat(cfg.top), 0, 0.55, -0.08));
+		this.kind = cfg.kind || 'sedan';
+		this.cfg = cfg;
 		const wheel = mat('#15181d');
-		for (const [wx, wz] of [[-0.26, 0.32], [0.26, 0.32], [-0.26, -0.32], [0.26, -0.32]]) {
-			this.obj.add(vox(0.1, 0.18, 0.18, wheel, wx, 0.12, wz, false));
+		if (this.kind === 'scooter') {
+			this.obj.add(vox(0.22, 0.18, 0.55, mat(cfg.body), 0, 0.28, 0));
+			this.obj.add(vox(0.16, 0.2, 0.16, mat(cfg.top), 0, 0.5, -0.1)); // rider torso
+			this.obj.add(vox(0.14, 0.12, 0.14, mat('#f3c19d'), 0, 0.68, -0.1)); // head
+			this.obj.add(vox(0.18, 0.1, 0.18, mat('#ffd43b'), 0, 0.8, -0.1, false)); // helmet
+			this.obj.add(vox(0.12, 0.16, 0.16, wheel, 0, 0.12, 0.18, false));
+			this.obj.add(vox(0.12, 0.16, 0.16, wheel, 0, 0.12, -0.18, false));
+		} else if (this.kind === 'van') {
+			this.obj.add(vox(0.62, 0.55, 1.25, mat(cfg.body), 0, 0.45, 0));
+			this.obj.add(vox(0.55, 0.28, 0.4, mat(cfg.top), 0, 0.78, -0.25));
+			// roof light bar
+			this.obj.add(vox(0.2, 0.08, 0.35, bmat('#ffd43b'), 0, 0.78, 0.15, false));
+			for (const [wx, wz] of [[-0.28, 0.38], [0.28, 0.38], [-0.28, -0.38], [0.28, -0.38]]) {
+				this.obj.add(vox(0.1, 0.18, 0.18, wheel, wx, 0.12, wz, false));
+			}
+			this.obj.add(vox(0.5, 0.18, 0.02, bmat('#1b2a4a'), 0, 0.5, 0.63, false)); // windshield
+		} else if (this.kind === 'taxi') {
+			this.obj.add(vox(0.58, 0.28, 1.15, mat(cfg.body), 0, 0.3, 0));
+			this.obj.add(vox(0.5, 0.26, 0.55, mat(cfg.top), 0, 0.56, -0.05));
+			this.obj.add(vox(0.22, 0.12, 0.18, bmat('#1b2a4a'), 0, 0.78, 0, false)); // roof sign
+			this.obj.add(vox(0.18, 0.06, 0.14, bmat('#ffd43b'), 0, 0.86, 0, false));
+			for (const [wx, wz] of [[-0.26, 0.34], [0.26, 0.34], [-0.26, -0.34], [0.26, -0.34]]) {
+				this.obj.add(vox(0.1, 0.18, 0.18, wheel, wx, 0.12, wz, false));
+			}
+			this.obj.add(vox(0.14, 0.08, 0.04, bmat('#fff3bf'), -0.16, 0.3, 0.58, false));
+			this.obj.add(vox(0.14, 0.08, 0.04, bmat('#fff3bf'), 0.16, 0.3, 0.58, false));
+		} else if (this.kind === 'police') {
+			this.obj.add(vox(0.58, 0.28, 1.2, mat(cfg.body), 0, 0.3, 0));
+			this.obj.add(vox(0.5, 0.24, 0.55, mat('#f8f9fa'), 0, 0.55, -0.05));
+			// white stripe
+			this.obj.add(vox(0.6, 0.1, 1.22, mat('#f8f9fa'), 0, 0.32, 0, false));
+			// light bar
+			this.obj.add(vox(0.14, 0.1, 0.28, bmat('#e03131'), -0.1, 0.72, 0, false));
+			this.obj.add(vox(0.14, 0.1, 0.28, bmat('#4dabf7'), 0.1, 0.72, 0, false));
+			for (const [wx, wz] of [[-0.26, 0.34], [0.26, 0.34], [-0.26, -0.34], [0.26, -0.34]]) {
+				this.obj.add(vox(0.1, 0.18, 0.18, wheel, wx, 0.12, wz, false));
+			}
+		} else {
+			this.obj.add(vox(0.55, 0.26, 1.1, mat(cfg.body), 0, 0.3, 0));
+			this.obj.add(vox(0.48, 0.24, 0.55, mat(cfg.top), 0, 0.55, -0.08));
+			for (const [wx, wz] of [[-0.26, 0.32], [0.26, 0.32], [-0.26, -0.32], [0.26, -0.32]]) {
+				this.obj.add(vox(0.1, 0.18, 0.18, wheel, wx, 0.12, wz, false));
+			}
+			this.obj.add(vox(0.12, 0.08, 0.04, bmat('#fff3bf'), -0.16, 0.3, 0.56, false));
+			this.obj.add(vox(0.12, 0.08, 0.04, bmat('#fff3bf'), 0.16, 0.3, 0.56, false));
 		}
-		this.obj.add(vox(0.12, 0.08, 0.04, bmat('#fff3bf'), -0.16, 0.3, 0.56, false));
-		this.obj.add(vox(0.12, 0.08, 0.04, bmat('#fff3bf'), 0.16, 0.3, 0.56, false));
 	}
 	interact() {
-		return { name: 'a car', line: ['beep beep.', 'honk.', '(polite Canadian honk)'][Math.floor(Math.random() * 3)] };
+		const lines = {
+			taxi: ['Meter’s running. Destination: vibes.', 'Yellow means go. Also means taxi.', '(trunk full of lost umbrellas)'],
+			police: ['Nothing to see here. Move along. (There’s everything to see here.)', '10-4. Sandwich still at large.', 'Sir, do you know why I pulled you over? Neither do I.'],
+			van: ['STATE business. Classified. (It’s snacks.)', 'Official purple. Very official.', 'Contents: one very important nothing.'],
+			scooter: ['Zip zip. Helmet optional. Style mandatory.', 'Two wheels, infinite opinions.', 'Honk is a beep and a prayer.'],
+			sedan: ['beep beep.', 'honk.', '(polite Canadian honk)'],
+		};
+		const pool = lines[this.kind] || lines.sedan;
+		return { name: this.kind === 'scooter' ? 'a scooter' : `a ${this.kind}`, line: pool[Math.floor(Math.random() * pool.length)] };
 	}
 }
 
@@ -533,8 +618,10 @@ class MarqueeAnim extends Entity3D {
 		if (k === this.last) return;
 		this.last = k;
 		const g = this.canvas.getContext('2d');
-		g.setTransform(4, 0, 0, 4, 0, 0);
-		arcadeFacade(g, this.canvas.width / 4, this.canvas.height / 4, t);
+		const S = FACADE_SCALE;
+		g.setTransform(S, 0, 0, S, 0, 0);
+		g.imageSmoothingEnabled = false;
+		arcadeFacade(g, this.canvas.width / S, this.canvas.height / S, t);
 		this.texture.needsUpdate = true;
 	}
 }
@@ -552,8 +639,10 @@ class ClockAnim extends Entity3D {
 		if (now.getMinutes() === this.lastMin) return;
 		this.lastMin = now.getMinutes();
 		const g = this.canvas.getContext('2d');
-		g.setTransform(4, 0, 0, 4, 0, 0);
-		const U = this.canvas.width / 4, H = this.canvas.height / 4;
+		const S = FACADE_SCALE;
+		g.setTransform(S, 0, 0, S, 0, 0);
+		g.imageSmoothingEnabled = false;
+		const U = this.canvas.width / S, H = this.canvas.height / S;
 		clockFace(g, U, H);
 		const cx = U / 2, cy = H / 2;
 		const ha = ((now.getHours() % 12) + now.getMinutes() / 60) / 12 * Math.PI * 2 - Math.PI / 2;
@@ -562,6 +651,9 @@ class ClockAnim extends Entity3D {
 		g.lineWidth = 1;
 		g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(ha) * 3.4, cy + Math.sin(ha) * 3.4); g.stroke();
 		g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(ma) * 5, cy + Math.sin(ma) * 5); g.stroke();
+		// centre pin
+		g.fillStyle = '#e0447c';
+		g.fillRect(cx - 0.6, cy - 0.6, 1.2, 1.2);
 		this.texture.needsUpdate = true;
 	}
 }
@@ -727,7 +819,7 @@ class SkyCycle extends Entity3D {
 			s.position.set(hash(i, 21) * 76 - 13, 11 + hash(i, 22) * 10, hash(i, 23) * 76 - 13);
 			this.obj.add(s);
 		}
-		// fireflies on grass
+		// fireflies on grass — each has a name Lil’ Dot swore by
 		this.flies = [];
 		let placed = 0, tries = 0;
 		while (placed < 36 && tries < 400) {
@@ -737,6 +829,21 @@ class SkyCycle extends Entity3D {
 			const f = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), bmat('#ffe066'));
 			f.position.set(gx + hash(tries, 33), 0.5, gy + hash(tries, 34));
 			f.userData.seed = placed;
+			const name = FIREFLY_NAMES[placed % FIREFLY_NAMES.length];
+			f.userData.pick = {
+				type: 'entity',
+				ent: {
+					interact: () => ({
+						name: `firefly · ${name}`,
+						line: [
+							`Hi, I’m ${name}.`,
+							`${name} reporting for glow duty.`,
+							`(${name} blinks twice. That’s a greeting.)`,
+							`${name}: “night shift is the best shift.”`,
+						][Math.floor(Math.random() * 4)],
+					}),
+				},
+			};
 			this.flies.push(f);
 			this.obj.add(f);
 			placed++;
@@ -1148,6 +1255,372 @@ class Busker extends Entity3D {
 	}
 }
 
+// ---------------------------------------------------------------- butterflies
+// Daytime meadow flutter — vanish at night, reappear when the sun is up.
+class Butterflies extends Entity3D {
+	constructor() {
+		super();
+		this.bugs = [];
+		const cols = ['#ff8fab', '#ffd43b', '#74c0fc', '#b197fc', '#ff922b'];
+		for (let i = 0; i < 8; i++) {
+			const g = new THREE.Group();
+			const col = cols[i % cols.length];
+			const w1 = vox(0.18, 0.02, 0.12, bmat(col), -0.1, 0, 0, false);
+			const w2 = vox(0.18, 0.02, 0.12, bmat(col), 0.1, 0, 0, false);
+			const body = vox(0.04, 0.04, 0.16, bmat('#3b3f46'), 0, 0, 0, false);
+			g.add(w1, w2, body);
+			g.userData.wings = [w1, w2];
+			g.userData.seed = i;
+			g.userData.home = [
+				8 + hash(i, 41) * 30,
+				0.4 + hash(i, 42) * 0.5,
+				8 + hash(i, 43) * 30,
+			];
+			g.userData.pick = {
+				type: 'entity',
+				ent: {
+					interact: () => ({
+						name: 'a butterfly',
+						line: BUTTERFLY_LINES[Math.floor(Math.random() * BUTTERFLY_LINES.length)],
+					}),
+				},
+			};
+			this.bugs.push(g);
+			this.obj.add(g);
+		}
+		// parent group itself isn't pickable; kids are
+		this.obj.userData.pick = null;
+	}
+	update(dt, t) {
+		const { f } = dayPhase(t);
+		const show = f > 0.35;
+		for (const b of this.bugs) {
+			b.visible = show;
+			if (!show) continue;
+			const s = b.userData.seed;
+			const [hx, hy, hz] = b.userData.home;
+			b.position.set(
+				hx + Math.sin(t / 1400 + s * 1.7) * 1.4,
+				hy + Math.sin(t / 900 + s) * 0.35,
+				hz + Math.cos(t / 1700 + s * 0.9) * 1.4
+			);
+			const flap = Math.sin(t / 90 + s * 3) * 0.85;
+			b.userData.wings[0].rotation.z = flap;
+			b.userData.wings[1].rotation.z = -flap;
+			b.rotation.y = t / 2000 + s;
+		}
+	}
+}
+
+// ---------------------------------------------------------------- shooting stars
+// Night-only streaks. Click one for a free wish (no coin required).
+class ShootingStars extends Entity3D {
+	constructor() {
+		super();
+		this.force = location.hash.includes('stars');
+		this.streak = vox(0.9, 0.08, 0.08, bmat('#ffffff'), 0, 0, 0, false);
+		this.streak.material.transparent = true;
+		this.streak.material.opacity = 0;
+		this.trail = vox(1.6, 0.05, 0.05, bmat('#ffe066'), -0.9, 0, 0, false);
+		this.trail.material.transparent = true;
+		this.trail.material.opacity = 0;
+		// fat invisible hit target — streaks are thin and easy to miss
+		const hit = vox(2.2, 0.6, 0.6, bmat('#ffffff'), -0.4, 0, 0, false);
+		hit.material.transparent = true;
+		hit.material.opacity = 0;
+		hit.material.depthWrite = false;
+		this.obj.add(this.streak, this.trail, hit);
+		this.obj.visible = false;
+		this.activeUntil = 0;
+		this.nextAt = 8000;
+		this.wishIdx = -1;
+	}
+	update(dt, t) {
+		const { f } = dayPhase(t);
+		const night = this.force || f < 0.2;
+		if (this.obj.visible) {
+			this.obj.position.x += this.vx * dt;
+			this.obj.position.y += this.vy * dt;
+			this.obj.position.z += this.vz * dt;
+			const life = Math.max(0, (this.activeUntil - t) / 1400);
+			this.streak.material.opacity = life;
+			this.trail.material.opacity = life * 0.55;
+			if (t > this.activeUntil) this.obj.visible = false;
+			return;
+		}
+		if (!night || t < this.nextAt) return;
+		this.nextAt = t + 9000 + Math.random() * 16000;
+		this.activeUntil = t + 1400;
+		const dir = Math.random() > 0.5 ? 1 : -1;
+		this.obj.position.set(
+			dir > 0 ? -2 + Math.random() * 20 : GRID + 2 - Math.random() * 20,
+			10 + Math.random() * 5,
+			5 + Math.random() * 35
+		);
+		this.vx = dir * (14 + Math.random() * 6);
+		this.vy = -4 - Math.random() * 3;
+		this.vz = (Math.random() - 0.5) * 4;
+		this.obj.rotation.y = Math.atan2(this.vx, this.vz);
+		this.obj.rotation.z = Math.atan2(this.vy, Math.hypot(this.vx, this.vz));
+		this.obj.visible = true;
+	}
+	interact() {
+		if (!this.obj.visible) return null;
+		this.wishIdx = (this.wishIdx + 1) % WISHES.length;
+		return { name: 'a shooting star', line: WISHES[this.wishIdx] };
+	}
+}
+
+// ---------------------------------------------------------------- paper airplane
+// Occasional sky mail from Pat. Click mid-flight for the memo.
+class PaperPlane extends Entity3D {
+	constructor() {
+		super();
+		const paper = bmat('#f8f4e8');
+		// simple folded dart
+		this.obj.add(vox(0.55, 0.04, 0.22, paper, 0, 0, 0, false));
+		this.obj.add(vox(0.18, 0.04, 0.45, paper, -0.05, 0.02, 0, false));
+		this.wingL = vox(0.35, 0.02, 0.18, paper, 0.05, 0.02, -0.18, false);
+		this.wingR = vox(0.35, 0.02, 0.18, paper, 0.05, 0.02, 0.18, false);
+		this.obj.add(this.wingL, this.wingR);
+		const hit = vox(0.9, 0.5, 0.7, bmat('#ffffff'), 0, 0, 0, false);
+		hit.material.transparent = true;
+		hit.material.opacity = 0;
+		hit.material.depthWrite = false;
+		this.obj.add(hit);
+		this.obj.visible = false;
+		this.nextAt = 18000;
+		this.lineIdx = -1;
+		this.p = 0;
+		this.flying = false;
+	}
+	update(dt, t) {
+		if (!this.flying) {
+			if (t < this.nextAt) return;
+			// ~40% chance each window; always show with #plane
+			if (!location.hash.includes('plane') && hash(Math.floor(t / 1000), 707) > 0.4) {
+				this.nextAt = t + 25000 + Math.random() * 40000;
+				return;
+			}
+			this.flying = true;
+			this.p = 0;
+			this.dir = hash(Math.floor(t), 808) > 0.5 ? 1 : -1;
+			this.baseZ = 10 + hash(Math.floor(t), 909) * 28;
+			this.baseY = 5.5 + hash(Math.floor(t), 101) * 2;
+		}
+		this.p += dt / 18; // ~18s crossing
+		if (this.p >= 1) {
+			this.flying = false;
+			this.obj.visible = false;
+			this.nextAt = t + 30000 + Math.random() * 50000;
+			return;
+		}
+		this.obj.visible = true;
+		const x = this.dir > 0 ? -4 + this.p * (GRID + 8) : GRID + 4 - this.p * (GRID + 8);
+		this.obj.position.set(
+			x,
+			this.baseY + Math.sin(this.p * Math.PI * 3) * 0.4,
+			this.baseZ + Math.sin(this.p * Math.PI * 2) * 1.5
+		);
+		this.obj.rotation.y = this.dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+		this.obj.rotation.z = Math.sin(t / 280) * 0.12;
+	}
+	interact() {
+		if (!this.obj.visible) return null;
+		this.lineIdx = (this.lineIdx + 1) % PLANE_LINES.length;
+		return { name: 'paper airplane', line: PLANE_LINES[this.lineIdx] };
+	}
+}
+
+// ---------------------------------------------------------------- fountain coin toss
+// Arc a gold coin into the fountain, splash, grant a wish line via interact.
+class CoinToss extends Entity3D {
+	constructor(fountain) {
+		super();
+		this.obj.userData.pick = null;
+		this.fx = fountain.x;
+		this.fy = fountain.y;
+		this.fz = fountain.z;
+		this.coin = vox(0.14, 0.05, 0.14, bmat('#ffd43b'), 0, 0, 0, false);
+		this.coin.visible = false;
+		this.obj.add(this.coin);
+		this.splashes = [];
+		for (let i = 0; i < 8; i++) {
+			const s = vox(0.1, 0.1, 0.1, bmat('#a0dcfa'), 0, 0, 0, false);
+			s.material.transparent = true;
+			s.material.opacity = 0;
+			s.visible = false;
+			this.splashes.push(s);
+			this.obj.add(s);
+		}
+		this.flying = false;
+		this.splashing = false;
+		this.t0 = 0;
+		this.wishIdx = -1;
+		this.lastWish = null;
+	}
+	toss() {
+		this.flying = true;
+		this.splashing = false;
+		this.t0 = performance.now();
+		this.coin.visible = true;
+		this.coin.position.set(this.fx - 1.2, 1.4, this.fz + 0.8);
+		this.wishIdx = (this.wishIdx + 1) % WISHES.length;
+		this.lastWish = WISHES[this.wishIdx];
+		return this.lastWish;
+	}
+	update(dt, t) {
+		if (this.flying) {
+			const k = Math.min(1, (performance.now() - this.t0) / 700);
+			const x = this.fx - 1.2 + k * 1.2;
+			const z = this.fz + 0.8 - k * 0.8;
+			const y = 1.4 + Math.sin(k * Math.PI) * 1.3 - k * 0.9;
+			this.coin.position.set(x, y, z);
+			this.coin.rotation.x += dt * 12;
+			this.coin.rotation.z += dt * 8;
+			if (k >= 1) {
+				this.flying = false;
+				this.coin.visible = false;
+				this.splashing = true;
+				this.t0 = performance.now();
+				this.splashes.forEach((s, i) => {
+					const a = (i / 8) * Math.PI * 2;
+					s.userData.vx = Math.cos(a) * 1.2;
+					s.userData.vz = Math.sin(a) * 1.2;
+					s.userData.vy = 1.8 + Math.random() * 0.6;
+					s.position.set(this.fx, 0.5, this.fz);
+					s.visible = true;
+					s.material.opacity = 0.9;
+				});
+			}
+		}
+		if (this.splashing) {
+			const age = (performance.now() - this.t0) / 1000;
+			for (const s of this.splashes) {
+				s.position.x += s.userData.vx * dt;
+				s.position.z += s.userData.vz * dt;
+				s.userData.vy -= 6 * dt;
+				s.position.y += s.userData.vy * dt;
+				s.material.opacity = Math.max(0, 0.9 - age * 1.4);
+			}
+			if (age > 0.8) {
+				this.splashing = false;
+				this.splashes.forEach((s) => { s.visible = false; });
+			}
+		}
+	}
+}
+
+// ---------------------------------------------------------------- gnome window flicker
+class GnomeFlicker extends Entity3D {
+	constructor(win) {
+		super();
+		this.obj.userData.pick = null;
+		this.win = win;
+		this.on = new THREE.Color('#ffd43b');
+		this.dim = new THREE.Color('#a67c1a');
+	}
+	update(dt, t) {
+		// cozy lamp pulse, with the odd "someone walked past" dip
+		const walk = Math.sin(t / 3100) > 0.92 ? 0.35 : 1;
+		const pulse = 0.7 + Math.sin(t / 500) * 0.15;
+		this.win.material.color.copy(this.on).lerp(this.dim, 1 - pulse * walk);
+	}
+}
+
+// ---------------------------------------------------------------- construction crane sway
+class CraneAnim extends Entity3D {
+	constructor(a) {
+		super();
+		this.obj.userData.pick = null;
+		this.a = a;
+	}
+	update(dt, t) {
+		const swing = Math.sin(t / 2800) * 0.35;
+		const { jib, cable, block, pivotX, pivotY, pivotZ, jibLen, tipLen, cableDrop, blockDrop } = this.a;
+		// jib pivots from the mast top; geometry center sits jibLen along the arm
+		jib.position.set(pivotX + Math.cos(swing) * jibLen, pivotY, pivotZ + Math.sin(swing) * jibLen);
+		jib.rotation.y = -swing;
+		const tipX = pivotX + Math.cos(swing) * tipLen;
+		const tipZ = pivotZ + Math.sin(swing) * tipLen;
+		const bob = Math.sin(t / 1400) * 0.15;
+		cable.position.set(tipX, pivotY - cableDrop / 2 + bob * 0.3, tipZ);
+		cable.scale.y = 1 + bob * 0.08;
+		block.position.set(tipX, pivotY - blockDrop + bob, tipZ);
+	}
+}
+
+// ---------------------------------------------------------------- cinema marquee blink
+class MarqueeBlink extends Entity3D {
+	constructor(bulbs) {
+		super();
+		this.obj.userData.pick = null;
+		this.bulbs = bulbs;
+		this.on = new THREE.Color('#ffd43b');
+		this.off = new THREE.Color('#5c4a1a');
+	}
+	update(dt, t) {
+		const { f } = dayPhase(t);
+		const base = 0.45 + (1 - f) * 0.55; // brighter at night
+		this.bulbs.forEach((b, i) => {
+			const lit = ((Math.floor(t / 180) + i) % 3) !== 0;
+			b.material.color.copy(lit ? this.on : this.off);
+			b.scale.setScalar(lit ? 1 : 0.75);
+			// night punch
+			if (lit && f < 0.4) b.material.color.lerp(new THREE.Color('#fff3bf'), base * 0.3);
+		});
+	}
+}
+
+// ---------------------------------------------------------------- treasure sparkles
+class TreasureSparkle extends Entity3D {
+	constructor(chest) {
+		super();
+		this.obj.userData.pick = null;
+		this.bits = [];
+		for (let i = 0; i < 6; i++) {
+			const m = vox(0.1, 0.1, 0.1, bmat('#ffd43b'), 0, 0, 0, false);
+			m.material.transparent = true;
+			m.material.opacity = 0;
+			this.bits.push(m);
+			this.obj.add(m);
+		}
+		// chest sits on east face; sparkle above the open lid
+		const p = chest.position;
+		this.bx = p.x - 0.3;
+		this.by = p.y + 1.1;
+		this.bz = p.z;
+	}
+	update(dt, t) {
+		this.bits.forEach((m, i) => {
+			const k = ((t / 1800) + i / 6) % 1;
+			const a = i * 1.1 + t / 900;
+			m.position.set(
+				this.bx + Math.cos(a) * 0.35,
+				this.by + k * 0.9,
+				this.bz + Math.sin(a) * 0.35
+			);
+			m.material.opacity = 0.85 * (1 - k);
+			const s = 0.5 + (1 - k) * 0.6;
+			m.scale.set(s, s, s);
+		});
+	}
+}
+
+// ---------------------------------------------------------------- garage bot bob
+class BotBob extends Entity3D {
+	constructor(bot) {
+		super();
+		this.obj.userData.pick = null;
+		this.bot = bot;
+		this.baseY = bot.position.y;
+	}
+	update(dt, t) {
+		this.bot.position.y = this.baseY + Math.abs(Math.sin(t / 400)) * 0.08;
+		this.bot.rotation.y = Math.sin(t / 1200) * 0.25;
+	}
+}
+
 // ---------------------------------------------------------------- dogs
 class Dog extends Entity3D {
 	constructor(cfg, i) {
@@ -1208,6 +1681,325 @@ class Dog extends Entity3D {
 	}
 }
 
+// ---------------------------------------------------------------- hot dog cart
+class HotdogCart extends Entity3D {
+	constructor(spot) {
+		super();
+		const parts = buildPerson(this.obj, HOTDOG);
+		this.dots = parts.dots;
+		// cart body beside the vendor
+		const cart = new THREE.Group();
+		cart.add(vox(0.9, 0.45, 0.55, mat('#e03131'), 0, 0.45, 0));
+		cart.add(vox(0.95, 0.08, 0.6, mat('#fff'), 0, 0.7, 0));
+		cart.add(vox(0.5, 0.35, 0.08, bmat('#ffd43b'), 0, 0.95, 0.28, false)); // umbrella-ish
+		cart.add(vox(0.12, 0.12, 0.12, mat('#2d3138'), -0.35, 0.12, 0.2, false));
+		cart.add(vox(0.12, 0.12, 0.12, mat('#2d3138'), 0.35, 0.12, 0.2, false));
+		// steam wisps (simple)
+		this.steam = [];
+		for (let i = 0; i < 3; i++) {
+			const p = vox(0.1, 0.1, 0.1, bmat('#f1f3f5'), 0.1 * i - 0.1, 1.1, 0, false);
+			p.material.transparent = true;
+			this.steam.push(p);
+			cart.add(p);
+		}
+		cart.position.set(0.85, 0, 0.2);
+		this.obj.add(cart);
+		this.obj.position.set(spot.x, 0, spot.z);
+		this.obj.rotation.y = -0.4;
+		this.lineIdx = -1;
+	}
+	update(dt, t) {
+		this.steam.forEach((p, i) => {
+			const k = ((t / 1400) + i / 3) % 1;
+			p.position.y = 1.0 + k * 0.5;
+			p.material.opacity = 0.55 * (1 - k);
+			p.scale.setScalar(0.6 + k);
+		});
+		this.dots.visible = this.frozen;
+	}
+	interact() {
+		this.lineIdx = (this.lineIdx + 1) % HOTDOG.lines.length;
+		return { name: HOTDOG.name, line: HOTDOG.lines[this.lineIdx], freeze: true };
+	}
+}
+
+// ---------------------------------------------------------------- roof guy
+class RoofGuy extends Entity3D {
+	constructor(deck) {
+		super();
+		const parts = buildPerson(this.obj, ROOF_GUY);
+		this.dots = parts.dots;
+		// lawn chair
+		this.obj.add(vox(0.5, 0.08, 0.5, mat('#fab005'), 0.55, 0.2, 0, false));
+		this.obj.add(vox(0.5, 0.4, 0.08, mat('#fab005'), 0.55, 0.4, -0.22, false));
+		// tiny drink
+		this.obj.add(vox(0.08, 0.12, 0.08, bmat('#ff6b9d'), 0.85, 0.3, 0.15, false));
+		this.obj.position.set(deck.x - 0.3, deck.y, deck.z);
+		this.baseY = deck.y;
+		this.lineIdx = -1;
+	}
+	update(dt, t) {
+		// lazy wave
+		this.obj.rotation.z = Math.sin(t / 900) * 0.04;
+		this.obj.position.y = this.baseY + Math.sin(t / 2000) * 0.02;
+		this.dots.visible = this.frozen;
+		if (this.frozen) this.dots.position.y = 1.5 + Math.sin(t / 300) * 0.04;
+	}
+	interact() {
+		this.lineIdx = (this.lineIdx + 1) % ROOF_GUY.lines.length;
+		return { name: ROOF_GUY.name, line: ROOF_GUY.lines[this.lineIdx], freeze: true };
+	}
+}
+
+// ---------------------------------------------------------------- runaway sandwich (Mo’s lunch, free-range)
+class RunawaySandwich extends Entity3D {
+	constructor(start) {
+		super();
+		// pixel sandwich: bread / filling / bread
+		this.obj.add(vox(0.36, 0.08, 0.28, mat('#f4d6a0'), 0, 0.2, 0));
+		this.obj.add(vox(0.34, 0.08, 0.26, mat('#37b24d'), 0, 0.28, 0)); // lettuce
+		this.obj.add(vox(0.32, 0.07, 0.24, mat('#e03131'), 0, 0.35, 0)); // tomato
+		this.obj.add(vox(0.36, 0.08, 0.28, mat('#e8c07a'), 0, 0.42, 0));
+		// little legs (chaos)
+		this.legL = vox(0.06, 0.1, 0.06, mat('#f4d6a0'), -0.1, 0.08, 0.08, false);
+		this.legR = vox(0.06, 0.1, 0.06, mat('#f4d6a0'), 0.1, 0.08, 0.08, false);
+		this.obj.add(this.legL, this.legR);
+		this.x = start.x;
+		this.z = start.z;
+		this.tx = start.x + 4;
+		this.tz = start.z + 2;
+		this.lineIdx = -1;
+	}
+	pickTarget() {
+		// bounce around downtown roads-ish
+		this.tx = 8 + Math.random() * 30;
+		this.tz = 8 + Math.random() * 28;
+	}
+	update(dt, t) {
+		const d = Math.hypot(this.tx - this.x, this.tz - this.z);
+		if (d < 0.2) this.pickTarget();
+		else {
+			const sp = 2.8;
+			this.x += ((this.tx - this.x) / d) * sp * dt;
+			this.z += ((this.tz - this.z) / d) * sp * dt;
+			this.obj.rotation.y = Math.atan2(this.tx - this.x, this.tz - this.z);
+		}
+		this.obj.position.set(this.x, 0.02 + Math.abs(Math.sin(t / 120)) * 0.08, this.z);
+		const swing = Math.sin(t / 80) * 0.5;
+		this.legL.rotation.x = swing;
+		this.legR.rotation.x = -swing;
+	}
+	interact() {
+		this.lineIdx = (this.lineIdx + 1) % SANDWICH.lines.length;
+		return { name: SANDWICH.name, line: SANDWICH.lines[this.lineIdx] };
+	}
+}
+
+// ---------------------------------------------------------------- delivery drone
+class DeliveryDrone extends Entity3D {
+	constructor() {
+		super();
+		this.obj.add(vox(0.45, 0.12, 0.45, mat('#495057'), 0, 0, 0));
+		this.obj.add(vox(0.2, 0.16, 0.2, bmat('#4dd4e8'), 0, 0.12, 0, false));
+		// rotors
+		this.rotors = [];
+		for (const [x, z] of [[-0.28, -0.28], [0.28, -0.28], [-0.28, 0.28], [0.28, 0.28]]) {
+			const r = vox(0.28, 0.03, 0.06, bmat('#dee2e6'), x, 0.1, z, false);
+			this.rotors.push(r);
+			this.obj.add(r);
+		}
+		// hanging package
+		this.obj.add(vox(0.04, 0.25, 0.04, mat('#868e96'), 0, -0.2, 0, false));
+		this.pkg = vox(0.22, 0.18, 0.22, mat('#e8590c'), 0, -0.4, 0, false);
+		this.obj.add(this.pkg);
+		this.lines = [
+			'Package airborne. Contents: classified (it’s soup).',
+			'Hovering is a lifestyle. Delivering is a side hustle.',
+			'Mo ordered again. The sandwich escaped. This is plan B.',
+			'FAA? Never heard of her. Local airspace is vibes-only.',
+		];
+		this.lineIdx = -1;
+	}
+	update(dt, t) {
+		const x = 20 + Math.cos(t / 14000) * 14;
+		const z = 20 + Math.sin(t / 11000) * 12;
+		const y = 4.2 + Math.sin(t / 900) * 0.35;
+		this.obj.position.set(x, y, z);
+		this.obj.rotation.y = t / 2000;
+		this.rotors.forEach((r, i) => { r.rotation.y = t / 40 + i; });
+		this.pkg.position.y = -0.4 + Math.sin(t / 300) * 0.04;
+	}
+	interact() {
+		this.lineIdx = (this.lineIdx + 1) % this.lines.length;
+		return { name: 'Delivery Drone 7', line: this.lines[this.lineIdx] };
+	}
+}
+
+// ---------------------------------------------------------------- purple construction plume (ref #1)
+class ConstrSmoke extends Entity3D {
+	constructor(spot) {
+		super();
+		this.obj.userData.pick = null;
+		this.puffs = [];
+		const cols = ['#c084fc', '#e599f7', '#da77f2', '#b197fc'];
+		for (let i = 0; i < 6; i++) {
+			const p = new THREE.Mesh(
+				new THREE.SphereGeometry(0.35 + (i % 3) * 0.12, 6, 5),
+				new THREE.MeshBasicMaterial({ color: cols[i % cols.length], transparent: true, opacity: 0.85 })
+			);
+			this.puffs.push(p);
+			this.obj.add(p);
+		}
+		this.obj.position.set(spot.x, spot.y, spot.z);
+	}
+	update(dt, t) {
+		this.puffs.forEach((p, i) => {
+			const k = ((t / 2200) + i / 6) % 1;
+			const a = i * 1.1;
+			p.position.set(Math.cos(a) * k * 0.5, k * 2.4, Math.sin(a) * k * 0.4);
+			const s = 0.5 + k * 1.6;
+			p.scale.set(s, s * 0.85, s);
+			p.material.opacity = 0.75 * (1 - k);
+		});
+	}
+}
+
+// frozen street-vignette characters (eBoy: a joke in every corner)
+class Vignette extends Entity3D {
+	constructor(cfg) {
+		super();
+		this.cfg = cfg;
+		this.lineIdx = -1;
+		const skin = '#f3c19d';
+		if (cfg.kind === 'rain') {
+			// yellow slicker + blue umbrella over the puddle
+			this.obj.add(vox(0.36, 0.4, 0.24, mat('#ffd43b'), 0, 0.55, 0));
+			this.obj.add(vox(0.28, 0.26, 0.24, mat(skin), 0, 0.9, 0));
+			this.obj.add(vox(0.55, 0.06, 0.55, mat('#4dabf7'), 0, 1.25, 0, false)); // umbrella canopy
+			this.obj.add(vox(0.05, 0.45, 0.05, mat('#343a40'), 0.12, 1.0, 0, false)); // shaft
+			this.obj.add(vox(0.14, 0.12, 0.18, mat('#ffd43b'), -0.08, 0.12, 0.05, false)); // boot
+			this.obj.add(vox(0.14, 0.12, 0.18, mat('#ffd43b'), 0.08, 0.12, 0.05, false));
+			this.lines = [
+				'*drip* Perfect weather for a website.',
+				'The puddle is decorative. I am committed to the bit.',
+				'Yellow coat, blue umbrella, purple road. Fashion.',
+			];
+			this.name = 'Raincoat Rex';
+		} else if (cfg.kind === 'pointer') {
+			this.obj.add(vox(0.38, 0.4, 0.24, mat('#ffd43b'), 0, 0.55, 0)); // hi-vis
+			this.obj.add(vox(0.28, 0.26, 0.24, mat(skin), 0, 0.9, 0));
+			this.obj.add(vox(0.34, 0.12, 0.3, mat('#ffd43b'), 0, 1.12, 0, false)); // hard hat
+			// pointing arm
+			const arm = vox(0.4, 0.1, 0.1, mat('#ffd43b'), 0.28, 0.7, 0.1, false);
+			arm.rotation.z = -0.4;
+			this.obj.add(arm);
+			this.lines = [
+				'That tower wasn’t there yesterday. I’m still pointing at it.',
+				'Hard hat means I know things. Mostly about cones.',
+				'See those barriers? I put them there. Career highlight.',
+			];
+			this.name = 'Pointer Pete';
+		} else if (cfg.kind === 'shovel') {
+			this.obj.add(vox(0.38, 0.4, 0.24, mat('#1b2a4a'), 0, 0.55, 0));
+			this.obj.add(vox(0.28, 0.26, 0.24, mat(skin), 0, 0.9, 0));
+			this.obj.add(vox(0.3, 0.12, 0.28, mat('#e03131'), 0, 1.12, 0, false));
+			this.obj.add(vox(0.08, 0.7, 0.08, mat('#868e96'), 0.25, 0.45, 0.1, false)); // shovel handle
+			this.obj.add(vox(0.22, 0.08, 0.16, mat('#adb5bd'), 0.25, 0.12, 0.1, false));
+			this.obj.add(vox(0.08, 0.16, 0.08, mat('#37b24d'), -0.22, 0.55, 0.14, false)); // bottle
+			this.lines = [
+				'Shovel’s for show. Bottle’s for morale.',
+				'I dig the aesthetic. Literally, sometimes.',
+				'Gold coins? Not my department. Hats, maybe.',
+			];
+			this.name = 'Shovel Sid';
+		} else if (cfg.kind === 'astro') {
+			this.obj.add(vox(0.4, 0.5, 0.3, mat('#f1f3f5'), 0, 0.55, 0));
+			this.obj.add(vox(0.32, 0.3, 0.3, mat('#f1f3f5'), 0, 0.95, 0));
+			this.obj.add(vox(0.22, 0.14, 0.08, bmat('#4dd4e8'), 0, 0.98, 0.16, false)); // visor
+			this.obj.add(vox(0.16, 0.2, 0.12, mat('#ced4da'), 0.22, 0.55, -0.05, false)); // pack
+			this.lines = [
+				'Earth’s atmosphere is… purple? Copy that.',
+				'High-five protocol initiated. Suit gloves are chunky.',
+				'Mission: tour the domain. Status: delighted.',
+			];
+			this.name = 'Astronaut';
+		} else if (cfg.kind === 'topper') {
+			this.obj.add(vox(0.36, 0.45, 0.24, mat('#1b2a4a'), 0, 0.55, 0));
+			this.obj.add(vox(0.28, 0.26, 0.24, mat(skin), 0, 0.95, 0));
+			this.obj.add(vox(0.3, 0.14, 0.3, mat('#1b2a4a'), 0, 1.18, 0, false)); // top hat
+			this.obj.add(vox(0.36, 0.04, 0.36, mat('#1b2a4a'), 0, 1.1, 0, false));
+			this.obj.add(vox(0.28, 0.22, 0.08, mat('#1b2a4a'), 0.05, 0.85, 0.18, false)); // umbrella handle pose
+			this.lines = [
+				'A fine town. Tall. Whimsical. Slightly illegal.',
+				'I am not the mayor. I just dress like I own a clock tower.',
+				'One does not simply walk into the furniture store. Correctly.',
+			];
+			this.name = 'Top Hat Terry';
+		} else if (cfg.kind === 'pink') {
+			this.obj.add(vox(0.36, 0.45, 0.24, mat('#ff6b9d'), 0, 0.55, 0));
+			this.obj.add(vox(0.28, 0.26, 0.24, mat(skin), 0, 0.95, 0));
+			this.obj.add(vox(0.34, 0.1, 0.32, mat('#ff6b9d'), 0, 1.14, 0, false));
+			this.obj.add(vox(0.12, 0.08, 0.12, mat('#ffd43b'), 0, 1.22, 0, false)); // hat jewel
+			this.lines = [
+				'Pink is a power color. Also a pixel.',
+				'We waved at the UFO. It curtsied. Lovely manners.',
+				'Is the wall legal? Darling, everything here is art.',
+			];
+			this.name = 'Lady Magenta';
+		} else {
+			this.lines = ['…'];
+			this.name = 'someone';
+		}
+		this.obj.position.set(cfg.x, 0, cfg.z);
+		this.obj.rotation.y = cfg.rot || 0;
+	}
+	update(dt, t) {
+		// tiny idle bob so vignettes feel alive
+		this.obj.position.y = Math.sin(t / 700 + this.cfg.x) * 0.015;
+		if (this.cfg.kind === 'pointer') {
+			// keep the pointing energetic
+			this.obj.rotation.z = Math.sin(t / 400) * 0.04;
+		}
+	}
+	interact() {
+		this.lineIdx = (this.lineIdx + 1) % this.lines.length;
+		return { name: this.name, line: this.lines[this.lineIdx], freeze: true };
+	}
+}
+
+// multi-beacon blink for skyline tips
+class SkyBeaconBlink extends Entity3D {
+	constructor(meshes) {
+		super();
+		this.obj.userData.pick = null;
+		this.meshes = meshes;
+		this.on = bmat('#ff6b6b');
+		this.off = bmat('#5c2020');
+		this.on2 = bmat('#ff5ea8');
+	}
+	update(dt, t) {
+		const k = Math.floor(t / 550) % 2;
+		this.meshes.forEach((m, i) => {
+			m.material = k ^ (i % 2) ? (i % 3 === 0 ? this.on2 : this.on) : this.off;
+		});
+	}
+}
+
+class NeonPulse extends Entity3D {
+	constructor(meshes) {
+		super();
+		this.obj.userData.pick = null;
+		this.meshes = meshes;
+		this.cols = ['#ff5ea8', '#4dd4e8', '#ffd43b', '#37b24d'];
+	}
+	update(dt, t) {
+		const k = Math.floor(t / 700) % this.cols.length;
+		this.meshes.forEach((m, i) => {
+			m.material = bmat(this.cols[(k + i) % this.cols.length]);
+		});
+	}
+}
+
 // ---------------------------------------------------------------- factory
 export function createLife(gfx, anchors, wall) {
 	const list = [];
@@ -1218,20 +2010,40 @@ export function createLife(gfx, anchors, wall) {
 	CARS.forEach((c) => list.push(new Car(c)));
 	list.push(new Cat(), new Boat(), new DuckFamily(), clouds, new Balloon(), new Birds(), new Ufo());
 	list.push(new Fireworks(), new Busker());
+	list.push(new Butterflies(), new ShootingStars(), new PaperPlane());
+	list.push(new DeliveryDrone());
 	DOGS.forEach((d, i) => list.push(new Dog(d, i)));
+	let coinToss = null;
 	if (anchors.mine) list.push(new Miner(anchors.mine, anchors.mineWheel));
 	if (anchors.dragon) list.push(new DragonAnim(anchors.dragon));
 	if (anchors.elevator) list.push(new ElevatorAnim(anchors.elevator));
 	if (anchors.minecart) list.push(new CartAnim(anchors.minecart));
 	if (anchors.crystals) list.push(new CrystalGlow(anchors.crystals));
 	if (anchors.chimney) list.push(new Smoke(anchors.chimney));
-	if (anchors.fountain) list.push(new FountainJet(anchors.fountain));
+	if (anchors.fountain) {
+		list.push(new FountainJet(anchors.fountain));
+		coinToss = new CoinToss(anchors.fountain);
+		list.push(coinToss);
+	}
 	if (anchors.flag) list.push(new Flapper(anchors.flag));
 	if (anchors.wembleFlag) list.push(new Flapper(anchors.wembleFlag, 380));
 	if (anchors.beacon) list.push(new Blinker(anchors.beacon));
 	if (anchors.arcadeCanvas) list.push(new MarqueeAnim(anchors.arcadeCanvas, anchors.arcadeTex));
 	if (anchors.clockCanvas) list.push(new ClockAnim(anchors.clockCanvas, anchors.clockTex));
 	if (anchors.wallTex) list.push(new WallSync(wall, anchors.wallTex));
+	if (anchors.gnomeWindow) list.push(new GnomeFlicker(anchors.gnomeWindow));
+	if (anchors.crane) list.push(new CraneAnim(anchors.crane));
+	if (anchors.marquee) list.push(new MarqueeBlink(anchors.marquee));
+	if (anchors.treasure) list.push(new TreasureSparkle(anchors.treasure));
+	if (anchors.bot) list.push(new BotBob(anchors.bot));
+	if (anchors.hotdog) list.push(new HotdogCart(anchors.hotdog));
+	if (anchors.roofDeck) list.push(new RoofGuy(anchors.roofDeck));
+	if (anchors.sandwichStart) list.push(new RunawaySandwich(anchors.sandwichStart));
+	if (anchors.constrSmoke) list.push(new ConstrSmoke(anchors.constrSmoke));
+	if (anchors.vignettes) anchors.vignettes.forEach((v) => list.push(new Vignette(v)));
+	if (anchors.skyBeacons?.length) list.push(new SkyBeaconBlink(anchors.skyBeacons));
+	if (anchors.neonSigns?.length) list.push(new NeonPulse(anchors.neonSigns));
 	for (const e of list) gfx.scene.add(e.obj);
+	list.tossCoin = () => (coinToss ? coinToss.toss() : null);
 	return list;
 }

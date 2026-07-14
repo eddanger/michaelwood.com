@@ -30,16 +30,22 @@ export function createGfx(canvas) {
 	// view state: target point + view half-height in world units.
 	// Panning moves the target in the CAMERA plane, so dragging down past the
 	// island edge naturally reveals the underground.
-	const view = { tx: 25, ty: 0.5, tz: 25, span: 15, min: 5, max: 44 };
+	// min is low so you can push in for eBoy-dense close-ups.
+	// default look centers a bit east so the high-rise block is in frame
+	const view = { tx: 28, ty: 1.2, tz: 22, span: 16, min: 3.2, max: 48 };
 	const R = new THREE.Vector3(), U = new THREE.Vector3();
 
-	// Render grain adapts to zoom: past the default view the world-space pixel
-	// density stays constant, so pulling back never looks chunkier than the
-	// landing view — the town just gets smaller. Zooming in keeps big pixels.
+	// Render grain adapts to zoom for an eBoy-style read:
+	//   • zoom IN  → finer buffer (px → 1) so facade/ground micro-detail shows
+	//   • zoom OUT → also finer, so the miniature stays sharp, not mushy
+	// Default street-level view stays chunky (PIXEL) for the classic look.
 	function pixelSize() {
-		const base = window.innerWidth < 700 ? 2 : PIXEL;
-		const px = Math.min(base, base * 15 / view.span);
-		return Math.max(1, Math.round(px * 4) / 4); // quarter steps limit rebuilds
+		const base = window.innerWidth < 700 ? 2.5 : PIXEL;
+		const ref = 15;
+		const px = view.span < ref
+			? base * (view.span / ref)   // closer → more fidelity
+			: base * (ref / view.span);  // farther → denser pixels, sharp town
+		return Math.max(1, Math.min(base, Math.round(px * 4) / 4));
 	}
 
 	let curPx = 0;

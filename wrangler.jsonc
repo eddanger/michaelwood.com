@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker config — michaelwood.com (v4: Woodtown)
+ * Cloudflare Worker config — michaelwood.com (Woodtown)
  *
  * Static assets in /public + a small Worker script (src/worker.js) that
  * persists the shared graffiti wall in D1 (binding: DB).

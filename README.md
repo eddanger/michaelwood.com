@@ -1,12 +1,12 @@
 # michaelwood.com — Woodtown 🏘️
 
-v4 of michaelwood.com: a tiny isometric pixel town with a shared graffiti
-wall. Not a furniture store.
+A tiny Three.js voxel town with a shared graffiti wall. Not a furniture store.
 
 Drag to wander, scroll to zoom, click people and buildings. The big brick
 wall downtown is painted by every visitor — strokes persist in Cloudflare D1
-and slowly weather away over ~60 days. There's a UFO. There are dinosaur
-bones. The town hall clock shows your local time.
+and slowly weather away over ~60 days. There's a UFO, dinosaur bones, a
+sleeping dragon, dogs with zoomies, fireworks after dark, and a busker who
+actually plays (WebAudio). The town hall clock shows your local time.
 
 ## Stack
 
@@ -34,12 +34,25 @@ bun run dev                                                # http://localhost:87
 npx wrangler deploy   # serves michaelwood.com + www (custom domains)
 ```
 
+## Debug hashes
+
+| hash | what |
+| --- | --- |
+| `#night` | start at night |
+| `#rain` | force rain |
+| `#fireworks` | fireworks anytime |
+| `#stars` | shooting stars anytime |
+| `#plane` | paper airplane flyby |
+| `#far` | fully zoomed-out miniature view |
+| `#underground` | pan down to the cross-section |
+| `#wall` | open the graffiti wall |
+
 ## Growing the town
 
-- New building: add an entry to `BUILDINGS` in `town.js` (config-driven
-  storefronts via `shopRenderer`, or a custom render fn). Mind the iso
-  occlusion rule: keep ~`height/8` rows south of a building clear.
-- New citizen: append to `CITIZENS` in `npc.js`.
+- New building: add an entry to `BUILDINGS` in `data.js`, then a branch in
+  `buildKind` (`town3d.js`) and optional facade painter.
+- New citizen / critter: append to `CITIZENS` / `DOGS` in `data.js`, or add an
+  `Entity3D` subclass in `life3d.js` and push it from `createLife`.
 - Wall admin: `DELETE /api/wall?key=…` power-washes all paint (set the
   `ADMIN_KEY` secret via `wrangler secret put ADMIN_KEY`).
 
@@ -47,3 +60,6 @@ npx wrangler deploy   # serves michaelwood.com + www (custom domains)
 
 `/apps`, `/resume.md`, `/keybase.txt`, `/notbug.gif` still served from
 `public/`. GarageBot lives at garagebot.michaelwood.com (dokku, separate).
+
+An abandoned forest prototype still exists under `public/js/v5/` but is not
+linked from the site.

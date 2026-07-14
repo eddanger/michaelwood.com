@@ -8,6 +8,7 @@ import {
 	paintGround, paintUnderground, UNDER_DEPTH, facade, shopFacade,
 	garageFacade, postFacade, wembleFacade, cinemaFacade, arcadeFacade,
 	townhallFacade, houseFacade, clockFace,
+	skyscraperFacade, apartmentFacade, hotelFacade, neonFacade,
 } from './painters.js';
 
 function tex(canvas) {
@@ -95,6 +96,9 @@ export function buildTown(scene, wallCanvas) {
 	// -------------------------------------------------- underground, in 3D
 	buildUnderground(root, anchors);
 
+	// ------------------------------------------------ street clutter
+	addStreetProps(root, anchors);
+
 	// ------------------------------------------------------------- trees
 	plantForest(root);
 	for (const [ox, oy] of OAKS) root.add(oakTree(ox + 0.5, oy + 0.5));
@@ -146,7 +150,7 @@ function buildKind(g, b, anchors, wallCanvas) {
 		beacon.position.set(b.gx + 0.7, H + 0.85, b.gy + 0.7);
 		g.add(beacon);
 		anchors.beacon = beacon;
-		// the little robot
+		// the little robot (bobs via BotBob)
 		const bot = new THREE.Group();
 		const body = boxMesh(0.34, 0.34, 0.26, mat('#4dd4e8'));
 		body.position.y = 0.38;
@@ -161,6 +165,7 @@ function buildKind(g, b, anchors, wallCanvas) {
 		bot.add(body, eye1, eye2, leg1, leg2);
 		bot.position.set(b.gx + b.w - 0.6, 0, b.gy + b.d + 0.35);
 		g.add(bot);
+		anchors.bot = bot;
 		return;
 	}
 
@@ -210,20 +215,27 @@ function buildKind(g, b, anchors, wallCanvas) {
 	}
 
 	if (kind === 'townhall') {
-		g.add(bldgBox(b, facade(b.w, H * 16, townhallFacade), '#e9e4d8', '#d5cfc0'));
+		g.add(bldgBox(b, facade(b.w, H * 16, townhallFacade), '#9a5e4a', '#6f4a28'));
 		const clockCanvas = facade(2, 1.4 * 16, clockFace);
 		anchors.clockCanvas = clockCanvas;
 		const clockTex = tex(clockCanvas);
 		anchors.clockTex = clockTex;
-		const side = mat('#cfc8b8');
-		const tower = boxMesh(2, 1.4, 2, [side, side, mat('#dcd6c8'), side, matT(clockTex), side]);
+		const side = mat('#8a5342');
+		const tower = boxMesh(2, 1.4, 2, [side, side, mat('#f1eee6'), side, matT(clockTex), side]);
 		tower.position.set(b.gx + 3, H + 0.7, b.gy + 2.5);
-		g.add(tower);
+		// front steps + railings (ref #2)
+		const steps = boxMesh(b.w * 0.55, 0.18, 0.55, mat('#e9e4d8'));
+		steps.position.set(cx, 0.09, b.gy + b.d + 0.2);
+		const railL = boxMesh(0.06, 0.55, 0.06, mat('#f1eee6'));
+		railL.position.set(cx - b.w * 0.22, 0.4, b.gy + b.d + 0.35);
+		const railR = railL.clone();
+		railR.position.x = cx + b.w * 0.22;
+		g.add(tower, steps, railL, railR);
 		return;
 	}
 
 	if (kind === 'house') {
-		g.add(bldgBox(b, facade(b.w, H * 16, houseFacade), '#e8896a', '#c96b4e'));
+		g.add(bldgBox(b, facade(b.w, H * 16, houseFacade), '#9a5e4a', '#6f4a28'));
 		const chim = boxMesh(0.35, 0.7, 0.35, mat('#9a6348'));
 		chim.position.set(b.gx + 0.6, H + 0.35, b.gy + 0.5);
 		g.add(chim);
@@ -237,17 +249,34 @@ function buildKind(g, b, anchors, wallCanvas) {
 		pole.position.set(b.gx + 0.4, H + 0.5, b.gy + 0.4);
 		const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.42), new THREE.MeshBasicMaterial({ color: '#2563eb', side: THREE.DoubleSide }));
 		flag.position.set(b.gx + 0.78, H + 0.85, b.gy + 0.4);
-		g.add(pole, flag);
+		// rooftop helipad joke + AC units
+		const pad = boxMesh(1.2, 0.06, 1.2, mat('#343a40'));
+		pad.position.set(cx, H + 0.03, cz);
+		const Hmark = boxMesh(0.5, 0.02, 0.08, new THREE.MeshBasicMaterial({ color: '#ffd43b' }), false);
+		Hmark.position.set(cx, H + 0.08, cz);
+		const Hmark2 = boxMesh(0.08, 0.02, 0.5, new THREE.MeshBasicMaterial({ color: '#ffd43b' }), false);
+		Hmark2.position.set(cx, H + 0.08, cz);
+		const ac = boxMesh(0.5, 0.3, 0.4, mat('#868e96'));
+		ac.position.set(b.gx + b.w - 0.7, H + 0.15, b.gy + 0.6);
+		g.add(pole, flag, pad, Hmark, Hmark2, ac);
 		anchors.wembleFlag = flag;
 		return;
 	}
 
 	if (kind === 'cinema') {
 		g.add(bldgBox(b, facade(b.w, H * 16, cinemaFacade), '#c94f7c', '#a83f66'));
-		// marquee ledge
+		// marquee ledge + blinky bulbs
 		const ledge = boxMesh(b.w * 0.9, 0.12, 0.5, mat('#12131a'));
 		ledge.position.set(cx, H * 0.68, b.gy + b.d + 0.25);
 		g.add(ledge);
+		const bulbs = [];
+		for (let i = 0; i < 9; i++) {
+			const bulb = boxMesh(0.12, 0.12, 0.12, new THREE.MeshBasicMaterial({ color: '#ffd43b' }), false);
+			bulb.position.set(b.gx + 0.55 + i * 0.48, H * 0.68 + 0.12, b.gy + b.d + 0.48);
+			g.add(bulb);
+			bulbs.push(bulb);
+		}
+		anchors.marquee = bulbs;
 		return;
 	}
 
@@ -273,7 +302,7 @@ function buildKind(g, b, anchors, wallCanvas) {
 			p2.position.set(b.gx + b.w, 0.2, b.gy + i);
 			g.add(p1, p2);
 		}
-		// crane
+		// crane (jib/cable/block swing via CraneAnim)
 		const craneMat = mat('#f59f00');
 		const mast = boxMesh(0.18, b.h, 0.18, craneMat);
 		mast.position.set(b.gx + 0.8, b.h / 2, b.gy + 0.8);
@@ -284,6 +313,11 @@ function buildKind(g, b, anchors, wallCanvas) {
 		const block = boxMesh(0.5, 0.4, 0.5, mat('#868e96'));
 		block.position.set(b.gx + 2.6, b.h - 1.8, b.gy + 0.8);
 		g.add(mast, jib, cable, block);
+		anchors.crane = {
+			jib, cable, block,
+			pivotX: b.gx + 0.8, pivotY: b.h - 0.2, pivotZ: b.gy + 0.8,
+			jibLen: 1.2, tipLen: 1.8, cableDrop: 1.4, blockDrop: 1.6,
+		};
 		// sign
 		const signCanvas = facade(2, 20, (g2) => {
 			g2.fillStyle = '#ffd43b';
@@ -438,8 +472,8 @@ function buildKind(g, b, anchors, wallCanvas) {
 	if (kind === 'watertower') {
 		const legMat = mat('#5e6673');
 		for (const [lx, lz] of [[0.3, 0.3], [1.7, 0.3], [0.3, 1.7], [1.7, 1.7]]) {
-			const leg = boxMesh(0.1, 2, 0.1, legMat);
-			leg.position.set(b.gx + lx, 1, b.gy + lz);
+			const leg = boxMesh(0.1, 2.2, 0.1, legMat);
+			leg.position.set(b.gx + lx, 1.1, b.gy + lz);
 			g.add(leg);
 		}
 		const label = facade(6, 24, (g2, U, h2) => {
@@ -451,12 +485,264 @@ function buildKind(g, b, anchors, wallCanvas) {
 		});
 		const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 1.3, 12), matT(tex(label)));
 		tank.castShadow = true;
-		tank.position.set(b.gx + 1, 2.55, b.gy + 1);
+		tank.position.set(b.gx + 1, 2.85, b.gy + 1);
 		const lid = new THREE.Mesh(new THREE.ConeGeometry(1.05, 0.4, 12), mat('#a5d8ff'));
-		lid.position.set(b.gx + 1, 3.4, b.gy + 1);
+		lid.position.set(b.gx + 1, 3.7, b.gy + 1);
 		g.add(tank, lid);
 		return;
 	}
+
+	if (kind === 'skyscraper') {
+		g.add(bldgBox(b, facade(b.w, H * 16, skyscraperFacade(b)), b.wall, b.roof));
+		// rooftop mechanicals + antenna (eBoy silhouette)
+		const ac = boxMesh(0.55, 0.35, 0.45, mat('#868e96'));
+		ac.position.set(b.gx + 0.6, H + 0.18, b.gy + 0.6);
+		const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.45, 8), mat('#74c0fc'));
+		tank.position.set(b.gx + b.w - 0.55, H + 0.25, b.gy + b.d - 0.55);
+		const mast = boxMesh(0.06, 1.1, 0.06, mat('#adb5bd'));
+		mast.position.set(cx, H + 0.7, cz);
+		const blink = boxMesh(0.14, 0.14, 0.14, new THREE.MeshBasicMaterial({ color: '#ff6b6b' }), false);
+		blink.position.set(cx, H + 1.25, cz);
+		g.add(ac, tank, mast, blink);
+		if (!anchors.skyBeacons) anchors.skyBeacons = [];
+		anchors.skyBeacons.push(blink);
+		// vertical neon strip on the street corner
+		const strip = boxMesh(0.08, H * 0.7, 0.08, new THREE.MeshBasicMaterial({ color: b.neon || '#ff5ea8' }), false);
+		strip.position.set(b.gx + 0.05, H * 0.45, b.gy + b.d + 0.04);
+		g.add(strip);
+		if (b.id === 'sky1') anchors.roofDeck = { x: cx, y: H + 0.05, z: cz };
+		return;
+	}
+
+	if (kind === 'apartment') {
+		g.add(bldgBox(b, facade(b.w, H * 16, apartmentFacade(b)), b.wall, b.roof));
+		// rooftop clothesline + AC
+		const pole1 = boxMesh(0.05, 0.5, 0.05, mat('#868e96'));
+		pole1.position.set(b.gx + 0.4, H + 0.25, b.gy + 0.4);
+		const pole2 = pole1.clone();
+		pole2.position.set(b.gx + b.w - 0.4, H + 0.25, b.gy + b.d - 0.4);
+		const line = boxMesh(b.w - 0.6, 0.03, 0.03, mat('#dee2e6'), false);
+		line.position.set(cx, H + 0.48, cz);
+		const sock = boxMesh(0.2, 0.28, 0.08, mat('#4dabf7'), false);
+		sock.position.set(cx - 0.3, H + 0.35, cz);
+		const sock2 = boxMesh(0.18, 0.24, 0.08, mat('#e0447c'), false);
+		sock2.position.set(cx + 0.35, H + 0.33, cz);
+		g.add(pole1, pole2, line, sock, sock2);
+		return;
+	}
+
+	if (kind === 'hotel') {
+		g.add(bldgBox(b, facade(b.w, H * 16, hotelFacade(b)), b.wall, b.roof));
+		// rooftop pool (tiny blue rectangle — eBoy joke)
+		const deck = boxMesh(b.w * 0.7, 0.06, b.d * 0.55, mat('#ced4da'));
+		deck.position.set(cx, H + 0.03, cz);
+		const pool = boxMesh(b.w * 0.45, 0.08, b.d * 0.3, new THREE.MeshBasicMaterial({ color: '#4dabf7' }), false);
+		pool.position.set(cx, H + 0.08, cz);
+		const umbrella = boxMesh(0.35, 0.05, 0.35, mat('#ff6b9d'), false);
+		umbrella.position.set(cx + b.w * 0.22, H + 0.22, cz - b.d * 0.12);
+		const upole = boxMesh(0.04, 0.25, 0.04, mat('#868e96'), false);
+		upole.position.set(cx + b.w * 0.22, H + 0.12, cz - b.d * 0.12);
+		g.add(deck, pool, umbrella, upole);
+		// rooftop beacon
+		const mast = boxMesh(0.05, 0.7, 0.05, mat('#adb5bd'));
+		mast.position.set(b.gx + 0.3, H + 0.4, b.gy + 0.3);
+		const blink = boxMesh(0.12, 0.12, 0.12, new THREE.MeshBasicMaterial({ color: b.accent || '#e0447c' }), false);
+		blink.position.set(b.gx + 0.3, H + 0.8, b.gy + 0.3);
+		g.add(mast, blink);
+		if (!anchors.skyBeacons) anchors.skyBeacons = [];
+		anchors.skyBeacons.push(blink);
+		return;
+	}
+
+	if (kind === 'neon') {
+		g.add(bldgBox(b, facade(b.w, H * 16, neonFacade(b)), b.wall, b.roof));
+		// freestanding neon sign box on the roof
+		const board = boxMesh(b.w * 0.8, 0.5, 0.12, new THREE.MeshBasicMaterial({ color: b.neon || '#ff5ea8' }), false);
+		board.position.set(cx, H + 0.4, b.gy + b.d + 0.05);
+		const board2 = boxMesh(b.w * 0.55, 0.28, 0.1, new THREE.MeshBasicMaterial({ color: b.neon2 || '#4dd4e8' }), false);
+		board2.position.set(cx, H + 0.85, b.gy + b.d + 0.05);
+		g.add(board, board2);
+		if (!anchors.neonSigns) anchors.neonSigns = [];
+		anchors.neonSigns.push(board, board2);
+		return;
+	}
+
+	if (kind === 'radio') {
+		// lattice mast with guy-wire vibe and blinking tip
+		const base = boxMesh(b.w * 0.7, 0.25, b.d * 0.7, mat('#5e6673'));
+		base.position.set(cx, 0.12, cz);
+		const mast = boxMesh(0.18, H, 0.18, mat('#adb5bd'));
+		mast.position.set(cx, H / 2, cz);
+		// cross spars
+		for (let i = 1; i < 6; i++) {
+			const spar = boxMesh(0.9 - i * 0.08, 0.06, 0.06, mat('#868e96'), false);
+			spar.position.set(cx, i * (H / 6), cz);
+			g.add(spar);
+		}
+		const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.15, 0.2, 8), mat('#ced4da'));
+		dish.position.set(cx + 0.35, H * 0.55, cz);
+		dish.rotation.z = 0.6;
+		const blink = boxMesh(0.2, 0.2, 0.2, new THREE.MeshBasicMaterial({ color: '#ff6b6b' }), false);
+		blink.position.set(cx, H + 0.15, cz);
+		g.add(base, mast, dish, blink);
+		if (!anchors.skyBeacons) anchors.skyBeacons = [];
+		anchors.skyBeacons.push(blink);
+		return;
+	}
+
+	if (kind === 'newsstand') {
+		const shed = boxMesh(b.w, H, b.d, mat('#f4e3c2'));
+		shed.position.set(cx, H / 2, cz);
+		const roof = boxMesh(b.w + 0.25, 0.12, b.d + 0.25, mat('#e03131'));
+		roof.position.set(cx, H + 0.06, cz);
+		const counter = boxMesh(b.w * 0.9, 0.2, 0.2, mat('#8a5a33'));
+		counter.position.set(cx, 0.55, b.gy + b.d + 0.05);
+		// magazine stack colors
+		const cols = ['#e0447c', '#4dabf7', '#ffd43b', '#37b24d', '#845ef7'];
+		for (let i = 0; i < 5; i++) {
+			const mag = boxMesh(0.35, 0.28, 0.08, mat(cols[i]), false);
+			mag.position.set(b.gx + 0.4 + i * 0.45, 0.75, b.gy + b.d + 0.12);
+			g.add(mag);
+		}
+		const signCanvas = facade(3, 12, (g2) => {
+			g2.fillStyle = '#1b2a4a';
+			g2.fillRect(0, 0, 48, 12);
+			g2.fillStyle = '#ffd43b';
+			g2.font = 'bold 5px monospace';
+			g2.fillText('GAZETTE', 6, 8.5);
+		});
+		const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), matT(tex(signCanvas)));
+		sign.position.set(cx, H + 0.35, b.gy + b.d + 0.02);
+		g.add(shed, roof, counter, sign);
+		return;
+	}
+}
+
+// eBoy street clutter: every few tiles a little joke (refs 1–3)
+function addStreetProps(root, anchors) {
+	// hot-dog cart spot (vendor entity sits here)
+	anchors.hotdog = { x: 14.5, z: 12.6 };
+	// oversized billboard facing the plaza
+	const bb = new THREE.Group();
+	const post = boxMesh(0.12, 2.4, 0.12, mat('#5e6673'));
+	post.position.y = 1.2;
+	const boardCanvas = facade(5, 28, (g2, U, h2) => {
+		g2.fillStyle = '#1b2a4a';
+		g2.fillRect(0, 0, U, h2);
+		g2.fillStyle = '#ff5ea8';
+		g2.fillRect(2, 2, U - 4, 10);
+		g2.fillStyle = '#fff';
+		g2.font = 'bold 6px monospace';
+		g2.fillText('VISIT', 22, 9);
+		g2.fillStyle = '#4dd4e8';
+		g2.font = 'bold 7px monospace';
+		g2.fillText('WOODTOWN', 8, 20);
+		g2.fillStyle = '#ffd43b';
+		g2.font = 'bold 5px monospace';
+		g2.fillText('pop: YOU', 18, 26);
+	});
+	const board = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.35), matT(tex(boardCanvas)));
+	board.position.set(0, 2.5, 0.08);
+	bb.add(post, board);
+	bb.position.set(10.5, 0, 16.2);
+	root.add(bb);
+
+	// traffic cones + orange/white barriers (ref #1)
+	for (const [x, z] of [[22.5, 28.5], [27.2, 28.8], [27.5, 32.5], [23.2, 33.2], [26.5, 29.2]]) {
+		const cone = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.35, 6), mat('#ff922b'));
+		cone.position.set(x, 0.18, z);
+		cone.castShadow = true;
+		const stripe = boxMesh(0.16, 0.06, 0.16, mat('#fff'), false);
+		stripe.position.set(x, 0.22, z);
+		root.add(cone, stripe);
+	}
+	// barrier runs
+	for (const [x, z, rot] of [[24.5, 28.3, 0], [26.8, 30.5, 0.5], [22.8, 31.5, -0.3]]) {
+		const bar = new THREE.Group();
+		for (let i = 0; i < 3; i++) {
+			const seg = boxMesh(0.55, 0.12, 0.1, mat(i % 2 ? '#ff922b' : '#fff'), false);
+			seg.position.set(i * 0.5 - 0.5, 0.45, 0);
+			bar.add(seg);
+		}
+		const leg1 = boxMesh(0.08, 0.5, 0.08, mat('#868e96'));
+		leg1.position.set(-0.7, 0.25, 0);
+		const leg2 = leg1.clone();
+		leg2.position.x = 0.7;
+		bar.add(leg1, leg2);
+		bar.position.set(x, 0, z);
+		bar.rotation.y = rot;
+		root.add(bar);
+	}
+
+	// purple construction smoke plume anchor (animated in life3d)
+	anchors.constrSmoke = { x: 25.2, y: 1.2, z: 31.4 };
+
+	// hard-hat mountain (ref #2 gold/hat piles)
+	const hatPile = new THREE.Group();
+	const hatCols = ['#ffd43b', '#f08c00', '#ffd43b', '#fab005', '#e67700'];
+	for (let i = 0; i < 9; i++) {
+		const hat = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 4), mat(hatCols[i % hatCols.length]));
+		hat.scale.y = 0.55;
+		hat.position.set((i % 3) * 0.22 - 0.22, 0.1 + Math.floor(i / 3) * 0.12, (Math.floor(i / 3) % 2) * 0.15);
+		hatPile.add(hat);
+	}
+	hatPile.position.set(22.2, 0, 30.2);
+	root.add(hatPile);
+
+	// gold coin spill near Bit Bank (ref #2)
+	const gold = new THREE.Group();
+	for (let i = 0; i < 14; i++) {
+		const coin = boxMesh(0.12, 0.05, 0.12, new THREE.MeshBasicMaterial({ color: '#ffd43b' }), false);
+		coin.position.set(hash(i, 2) * 0.9 - 0.2, 0.04 + hash(i, 3) * 0.08, hash(i, 4) * 0.7);
+		coin.rotation.y = hash(i, 5) * 3;
+		gold.add(coin);
+	}
+	gold.position.set(40.5, 0, 18.2);
+	root.add(gold);
+
+	// black phone booth (ref #2)
+	const booth = new THREE.Group();
+	const boothBody = boxMesh(0.55, 1.35, 0.55, mat('#1b1f2a'));
+	boothBody.position.y = 0.68;
+	const boothGlass = boxMesh(0.4, 0.55, 0.06, new THREE.MeshBasicMaterial({ color: '#74c0fc', transparent: true, opacity: 0.45 }), false);
+	boothGlass.position.set(0, 0.85, 0.28);
+	const boothRoof = boxMesh(0.62, 0.1, 0.62, mat('#0d1117'));
+	boothRoof.position.y = 1.4;
+	booth.add(boothBody, boothGlass, boothRoof);
+	booth.position.set(18.5, 0, 19.3);
+	root.add(booth);
+
+	// mailbox by the post office
+	const box = boxMesh(0.28, 0.45, 0.22, mat('#4d79c7'));
+	box.position.set(14.2, 0.28, 8.3);
+	const flag = boxMesh(0.12, 0.06, 0.04, mat('#e03131'), false);
+	flag.position.set(14.35, 0.42, 8.3);
+	root.add(box, flag);
+
+	// fire hydrant downtown
+	const hyd = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.4, 6), mat('#e03131'));
+	hyd.position.set(15.2, 0.2, 13.5);
+	hyd.castShadow = true;
+	root.add(hyd);
+
+	// static vignette figures — frozen jokes you can still click
+	anchors.vignettes = [
+		// yellow raincoat + blue umbrella over a puddle (ref #1)
+		{ kind: 'rain', x: 11.4, z: 12.5, rot: 0.4 },
+		// construction worker pointing (ref #1)
+		{ kind: 'pointer', x: 23.8, z: 28.0, rot: -0.6 },
+		// worker with shovel + green bottle (ref #2)
+		{ kind: 'shovel', x: 27.5, z: 20.5, rot: 2.2 },
+		// two astronauts high-five-ish (ref #1)
+		{ kind: 'astro', x: 38.5, z: 13.2, rot: 0.2 },
+		{ kind: 'astro', x: 39.1, z: 13.5, rot: -2.4 },
+		// royal stroll outside town hall (ref #2, Woodtown edition)
+		{ kind: 'topper', x: 18.2, z: 19.6, rot: 0.1 },
+		{ kind: 'pink', x: 18.7, z: 19.7, rot: 0.1 },
+	];
+
+	// rooftop sandwich spawn reference (chased across town)
+	anchors.sandwichStart = { x: 18, z: 24 };
 }
 
 // ------------------------------------------------------------ underground
@@ -623,6 +909,7 @@ function buildUnderground(root, anchors) {
 	chest.rotation.y = Math.PI / 2; // face east, out of the cliff
 	chest.position.set(50.12, -2.4, 50 - 230 / 16);
 	g.add(chest);
+	anchors.treasure = chest;
 }
 
 // ---------------------------------------------------------------- greenery
@@ -630,6 +917,9 @@ export const LAMP_SPOTS = [
 	[11.6, 9.6], [14.4, 12.4], [27.6, 9.6], [30.4, 12.4],
 	[11.6, 25.6], [14.4, 28.4], [27.6, 25.6], [30.4, 28.4],
 	[3, 12.4], [46, 9.6], [3, 28.4], [46, 25.6],
+	// denser street lights around the high-rise block
+	[35.5, 12.4], [39.5, 12.4], [43.5, 18.4], [35.5, 28.4],
+	[14.4, 36.4], [3, 36.4], [30.4, 36.4],
 ];
 
 function lamp(x, z) {

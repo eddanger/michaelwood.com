@@ -66,6 +66,49 @@ canvas.addEventListener('wheel', (e) => {
 	gfx.zoomBy(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY);
 }, { passive: false });
 
+// ---------------------------------------------------------------- toast + pop
+const toastEl = document.getElementById('toast');
+const popLine = document.getElementById('pop-line');
+let toastTimer = 0;
+let flowersPlanted = 0;
+const toastedMilestones = new Set();
+
+function toast(msg, ms = 2800) {
+	if (!toastEl) return;
+	toastEl.textContent = msg;
+	toastEl.hidden = false;
+	// reflow so the transition retriggers
+	toastEl.classList.remove('show');
+	void toastEl.offsetWidth;
+	toastEl.classList.add('show');
+	clearTimeout(toastTimer);
+	toastTimer = setTimeout(() => {
+		toastEl.classList.remove('show');
+		setTimeout(() => { toastEl.hidden = true; }, 280);
+	}, ms);
+}
+
+function updatePop() {
+	if (!popLine) return;
+	if (flowersPlanted <= 0) {
+		popLine.textContent = 'welcome to Woodtown · pop. 1 + you';
+	} else if (flowersPlanted === 1) {
+		popLine.textContent = 'welcome to Woodtown · pop. 1 + you + 1 flower';
+	} else {
+		popLine.textContent = `welcome to Woodtown · pop. 1 + you + ${flowersPlanted} flowers`;
+	}
+}
+
+function onFlowerPlanted() {
+	flowersPlanted++;
+	updatePop();
+	if (flowersPlanted === 1) toast('🌱 first flower! Fern will water it later.');
+	else if (flowersPlanted === 5) toast('🌼 a tiny meadow. GDP is up.');
+	else if (flowersPlanted === 15) toast('🌸 the shrubs approve. Loudly.');
+	else if (flowersPlanted === 40) toast('🌺 legendary gardener. Fern sends regards.');
+	else if (flowersPlanted === 100) toast('🌻 one hundred flowers. The mayor declares a holiday.');
+}
+
 // ---------------------------------------------------------------- clicks
 function handleClick(e) {
 	if (inWall) return;
@@ -77,7 +120,20 @@ function handleClick(e) {
 	}
 	if (hit.data.type === 'entity') {
 		const r = hit.data.ent.interact();
-		if (r) showBubble(r.name, r.line, e.clientX, e.clientY, r.freeze ? hit.data.ent : null);
+		if (r) {
+			showBubble(r.name, r.line, e.clientX, e.clientY, r.freeze ? hit.data.ent : null);
+			// one-shot discovery toasts for rare sky things
+			if (r.name === 'a shooting star' && !toastedMilestones.has('star')) {
+				toastedMilestones.add('star');
+				toast('✨ you caught a shooting star!');
+			} else if (r.name === 'paper airplane' && !toastedMilestones.has('plane')) {
+				toastedMilestones.add('plane');
+				toast('✈️ air mail received.');
+			} else if (r.name && r.name.startsWith('firefly') && !toastedMilestones.has('fly')) {
+				toastedMilestones.add('fly');
+				toast('✨ Lil’ Dot named them all. You found one.');
+			}
+		}
 		return;
 	}
 	if (hit.data.type === 'building') {
@@ -90,6 +146,7 @@ function handleClick(e) {
 	const gx = Math.floor(hit.point.x), gy = Math.floor(hit.point.z);
 	if (tileType(gx, gy) === 0 && !inBuildingZone(gx, gy)) {
 		town.addFlower(hit.point.x, hit.point.z);
+		onFlowerPlanted();
 	}
 }
 
@@ -133,9 +190,20 @@ function showPlaque(b, cx, cy) {
 		plaqueAction.hidden = false;
 		plaqueAction.textContent = b.action.label;
 		plaqueAction.onclick = () => {
-			hidePlaque();
-			if (b.action.kind === 'wall') enterWall();
-			else if (b.action.kind === 'link') window.open(b.action.url, '_blank', 'noopener');
+			if (b.action.kind === 'wall') {
+				hidePlaque();
+				enterWall();
+			} else if (b.action.kind === 'link') {
+				hidePlaque();
+				window.open(b.action.url, '_blank', 'noopener');
+			} else if (b.action.kind === 'coin') {
+				const wish = life.tossCoin && life.tossCoin();
+				if (wish) {
+					plaqueBody.textContent = wish;
+					plaqueAction.textContent = '🪙 toss another';
+					toast('🪙 splash! wish filed with the mayor.');
+				}
+			}
 		};
 	} else {
 		plaqueAction.hidden = true;

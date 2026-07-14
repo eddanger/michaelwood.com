@@ -26,57 +26,98 @@ export function tileType(gx, gy) {
 }
 
 // heights are in world units (1 unit = 1 tile = 16 face-px)
+// eBoy density: tall glass, neon mid-rises, stacked signs, silly rooftops
 export const BUILDINGS = [
 	{ id: 'garage', gx: 3, gy: 2, w: 5, d: 4, h: 1.6, kind: 'garage', title: 'GARAGEBOT HQ',
 		body: 'A small robot lives here and operates one very real garage door somewhere in Canada. Employee of the month, every month, since forever.' },
-	{ id: 'post', gx: 15, gy: 4, w: 4, d: 4, h: 1.9, kind: 'post', title: 'WOODTOWN POST OFFICE',
+	{ id: 'post', gx: 15, gy: 4, w: 4, d: 4, h: 2.2, kind: 'post', title: 'WOODTOWN POST OFFICE',
 		body: 'This entire town exists so one guy’s email gets delivered. That’s it. That’s the website. (No, you can’t see the mail.)' },
-	{ id: 'bakery', gx: 22, gy: 4, w: 4, d: 4, h: 1.5, kind: 'shop', wall: '#f9a8c9', roof: '#e585ad',
+	{ id: 'bakery', gx: 22, gy: 4, w: 4, d: 4, h: 1.8, kind: 'shop', wall: '#f9a8c9', roof: '#e585ad',
 		shop: { wall: '#f9a8c9', signBg: '#7a2946', signFg: '#ffdeeb', sign: 'BAKERY', windows: 2 },
 		title: 'WOODTOWN BAKERY',
 		body: 'Fresh pixel bread daily. Everything is exactly 8 bits crispy. The croissants are rectangles — nobody minds.' },
-	{ id: 'wall', gx: 2, gy: 14, w: 8, d: 1, h: 2.1, kind: 'graffiti', title: 'THE WALL',
+	{ id: 'ramen', gx: 31, gy: 4, w: 3, d: 3, h: 2.4, kind: 'shop', wall: '#ff8787', roof: '#e03131',
+		shop: { wall: '#ff8787', signBg: '#5c1010', signFg: '#ffe3e3', sign: '8-BIT RAMEN', windows: 2, awning: true },
+		title: '8-BIT RAMEN',
+		body: 'Broth rendered at 16 samples per spoon. The soft-boiled egg is two yellow pixels. Open until the sun loops.' },
+	{ id: 'wall', gx: 2, gy: 14, w: 8, d: 1, h: 2.4, kind: 'graffiti', title: 'THE WALL',
 		body: 'Woodtown’s finest surface. Everything painted here is seen by every visitor, and slowly weathers away with time. Leave your mark.',
 		action: { label: '🎨 paint it', kind: 'wall' } },
-	{ id: 'shop', gx: 1, gy: 21, w: 5, d: 4, h: 1.9, kind: 'shop', wall: '#ffd166', roof: '#e5b44e',
+	{ id: 'shop', gx: 1, gy: 21, w: 5, d: 4, h: 2.2, kind: 'shop', wall: '#ffd166', roof: '#e5b44e',
 		shop: { wall: '#ffd166', signBg: '#1b2a4a', signFg: '#ffd43b', sign: 'NOT A FURNITURE', sign2: 'STORE', awning: true, sofa: true },
 		title: 'DEFINITELY NOT A FURNITURE STORE',
 		body: 'People keep wandering in looking for tables and chairs. Different Michael Wood. This store has never stocked a single item, and business is great.' },
 	{ id: 'fountain', gx: 8, gy: 19, w: 3, d: 3, h: 0.9, kind: 'fountain', title: 'WISHING FOUNTAIN',
-		body: 'Toss in a coin! (Coins not included. Wishes granted at the mayor’s discretion, which is to say never, but the splashing is nice.)' },
-	{ id: 'townhall', gx: 16, gy: 14, w: 6, d: 5, h: 2.4, kind: 'townhall', title: 'WOODTOWN TOWN HALL',
+		body: 'Toss in a coin! Wishes granted at the mayor’s discretion, which is to say almost never — but the splash is free and very real.',
+		action: { label: '🪙 toss a coin', kind: 'coin' } },
+	{ id: 'townhall', gx: 16, gy: 14, w: 6, d: 5, h: 3.2, kind: 'townhall', title: 'WOODTOWN TOWN HALL',
 		body: 'Seat of government. The clock is real — it shows YOUR time, because in Woodtown, the visitor is always right.' },
-	{ id: 'cafe', gx: 24, gy: 14, w: 4, d: 4, h: 1.6, kind: 'shop', wall: '#b08968', roof: '#94714f',
+	{ id: 'cafe', gx: 24, gy: 14, w: 4, d: 4, h: 2.0, kind: 'shop', wall: '#b08968', roof: '#94714f',
 		shop: { wall: '#b08968', signBg: '#3e2c1c', signFg: '#ffe8cc', sign: 'BEAN THERE', windows: 2 },
 		title: 'BEAN THERE CAFÉ',
 		body: 'Coffee so pixelated you can count the beans. Free wifi, no password, no wifi.' },
-	{ id: 'house', gx: 24, gy: 21, w: 3, d: 3, h: 1.4, kind: 'house', title: 'MIKE’S PLACE',
+	{ id: 'house', gx: 24, gy: 21, w: 3, d: 3, h: 1.6, kind: 'house', title: 'MIKE’S PLACE',
 		body: 'Home of the mayor (self-appointed, ran unopposed). If you need him, leave a note on the big wall downtown.' },
-	{ id: 'wemble', gx: 16, gy: 21, w: 5, d: 3, h: 2.25, kind: 'wemble', title: 'WEMBLE DEVELOPMENT CORPORATION — HQ',
-		body: 'World headquarters. A real software company, run by the mayor. Rumour has it they built this entire town.',
+	{ id: 'wemble', gx: 16, gy: 21, w: 5, d: 3, h: 4.6, kind: 'wemble', title: 'WEMBLE DEVELOPMENT CORPORATION — HQ',
+		body: 'World headquarters. A real software company, run by the mayor. Rumour has it they built this entire town. Floors keep appearing overnight.',
 		action: { label: 'visit wemble.com →', kind: 'link', url: 'https://wemble.com' } },
-	{ id: 'cinema', gx: 31, gy: 14, w: 5, d: 5, h: 2.25, kind: 'cinema', title: 'PIXELPLEX CINEMA',
+	{ id: 'cinema', gx: 31, gy: 14, w: 5, d: 5, h: 3.4, kind: 'cinema', title: 'PIXELPLEX CINEMA',
 		body: 'Now showing: “NOT A BUG” — the heartwarming story of a feature. One screen, zero seats, five stars. (Sequel “NOT A BUG 2: STILL A FEATURE” in production.)' },
-	{ id: 'library', gx: 31, gy: 22, w: 4, d: 3, h: 1.5, kind: 'shop', wall: '#c8b6a6', roof: '#a99787',
+	{ id: 'library', gx: 31, gy: 22, w: 4, d: 3, h: 2.0, kind: 'shop', wall: '#c8b6a6', roof: '#a99787',
 		shop: { wall: '#c8b6a6', signBg: '#4a3728', signFg: '#f4e3c2', sign: 'LIBRARY', windows: 3 },
 		title: 'WOODTOWN LIBRARY',
 		body: 'One book: the resume. It’s at /resume.md and it’s riveting. Shhh.' },
-	{ id: 'arcade', gx: 16, gy: 29, w: 4, d: 4, h: 2.1, kind: 'arcade', title: 'WOODTOWN ARCADE',
+	{ id: 'arcade', gx: 16, gy: 29, w: 4, d: 4, h: 2.6, kind: 'arcade', title: 'WOODTOWN ARCADE',
 		body: 'Cabinets are on order. This town keeps growing — new stuff shows up when the mayor gets a weird idea. Check back.' },
-	{ id: 'constr', gx: 23, gy: 29, w: 4, d: 4, h: 2.9, kind: 'construction', title: 'CONSTRUCTION SITE',
-		body: 'Something is being built here. Nobody knows what — the blueprints are just a napkin with “make it fun” written on it.' },
+	{ id: 'constr', gx: 23, gy: 29, w: 4, d: 4, h: 3.6, kind: 'construction', title: 'CONSTRUCTION SITE',
+		body: 'Something is being built here. Nobody knows what — the blueprints are just a napkin with “make it fun” written on it. The crane is taller than the law allows.' },
 	{ id: 'greenhouse', gx: 3, gy: 30, w: 4, d: 3, h: 0.9, kind: 'greenhouse', title: 'FERN’S GREENHOUSE',
 		body: 'Tomatoes, flowers, and one suspiciously large pumpkin being grown for the fair. The fair is also not built yet.' },
-	{ id: 'tower', gx: 36, gy: 30, w: 2, d: 2, h: 3.4, kind: 'watertower', title: 'WOODTOWN WATER TOWER',
+	{ id: 'tower', gx: 36, gy: 30, w: 2, d: 2, h: 3.8, kind: 'watertower', title: 'WOODTOWN WATER TOWER',
 		body: 'Est. whenever this domain was registered. Population: 1, plus you. Water quality: pixelated.' },
 	{ id: 'dogpark', gx: 33, gy: 34, w: 5, d: 4, h: 0.5, kind: 'dogpark', title: 'WOODTOWN DOG PARK',
 		body: 'All dogs are good dogs. The hydrant is ceremonial. Zoomies happen on no fixed schedule. The cat has opinions and files them from a safe distance.' },
 	{ id: 'mine', gx: 21, gy: 46, w: 3, d: 3, h: 1.9, kind: 'mine', title: 'WOODTOWN MINE',
 		body: 'Deepest hole on any personal website. Mo works the seam — sandwiches go down, gold comes up. Do NOT lean over the hatch; the dragon considers that flirting.' },
-	{ id: 'boathouse', gx: 42, gy: 12, w: 3, d: 2, h: 1.25, kind: 'shop', wall: '#74a3c7', roof: '#5b88ab',
+	{ id: 'boathouse', gx: 42, gy: 12, w: 3, d: 2, h: 1.4, kind: 'shop', wall: '#74a3c7', roof: '#5b88ab',
 		shop: { wall: '#74a3c7', signBg: '#274156', signFg: '#d7ecff', sign: 'BOATS', windows: 1 },
 		title: 'WOODTOWN BOAT RENTAL',
 		body: 'One boat. It’s out. It’s always out. Ask the guy on the lake how the fishing is — he loves that.' },
+
+	// —— downtown high-rises (eBoy skyline) ——
+	{ id: 'sky1', gx: 36, gy: 14, w: 3, d: 3, h: 7.2, kind: 'skyscraper',
+		wall: '#4a5568', roof: '#2d3748', accent: '#4dd4e8', neon: '#ff5ea8',
+		sign: 'CLOUD.EXE', floors: 9,
+		title: 'CLOUD.EXE TOWER',
+		body: 'Tallest thing on the domain. Hosts 99.9% of the town’s vaporware. The rooftop antenna argues with the UFO.' },
+	{ id: 'sky2', gx: 40, gy: 14, w: 3, d: 4, h: 5.8, kind: 'skyscraper',
+		wall: '#2b2d42', roof: '#1a1b2e', accent: '#ffd43b', neon: '#7ee8fa',
+		sign: 'BIT BANK', floors: 7,
+		title: 'BIT BANK',
+		body: 'Accepts deposits in compliments and dog photos. Interest rate: one joke per floor. Vault contains a single golden pixel.' },
+	{ id: 'apt', gx: 36, gy: 22, w: 4, d: 3, h: 4.4, kind: 'apartment',
+		wall: '#e8b4a0', roof: '#c98d7a', accent: '#5c7cfa',
+		title: 'STACK OVERFLOW APARTMENTS',
+		body: 'Balconies full of laundry, plants, and one guy who never leaves the roof. Units go to infinity; only twelve have keys.' },
+	{ id: 'hotel', gx: 41, gy: 22, w: 4, d: 3, h: 5.2, kind: 'hotel',
+		wall: '#dee2e6', roof: '#adb5bd', accent: '#e0447c',
+		title: 'THE GRAND PIXEL',
+		body: 'Five stars, zero vacancies, infinite elevators. Lobby fountain is a cousin of the real one. Room service: sandwiches for Mo.' },
+	{ id: 'neonshop', gx: 1, gy: 35, w: 4, d: 3, h: 3.1, kind: 'neon',
+		wall: '#1b1f3a', roof: '#12131a', neon: '#ff5ea8', neon2: '#4dd4e8',
+		sign: 'NIGHT OWL',
+		title: 'NIGHT OWL MART',
+		body: 'Open 24/7 in a town that has no clocks except the one you brought. Sells snacks, glow sticks, and suspiciously legal fireworks.' },
+	{ id: 'radio', gx: 42, gy: 30, w: 2, d: 2, h: 6.4, kind: 'radio',
+		title: 'WWDN RADIO TOWER',
+		body: 'Broadcasting “Six-String Sam Live” on a loop whether he likes it or not. The blinking red light is a style choice and also aviation law.' },
+	{ id: 'pizza', gx: 8, gy: 30, w: 4, d: 3, h: 2.1, kind: 'shop', wall: '#ffd8a8', roof: '#fd7e14',
+		shop: { wall: '#ffd8a8', signBg: '#d9480f', signFg: '#fff4e6', sign: 'SLICE.exe', windows: 2, awning: true },
+		title: 'SLICE.EXE',
+		body: 'Pizza so square it tiles. Pepperoni is rendered last. Delivery drone has unionized.' },
+	{ id: 'news', gx: 15, gy: 35, w: 3, d: 2, h: 1.4, kind: 'newsstand',
+		title: 'WOODTOWN GAZETTE',
+		body: 'Headline today: “TOWN GETS TALLER, CITIZENS UNBOTHERED.” Yesterday: same thing. Tomorrow: sandwich still missing.' },
 ];
 
 export const OAKS = [[10, 6], [14, 24], [9, 36], [32, 2.5], [37, 21], [44, 32], [22, 42]];
@@ -171,8 +212,72 @@ export const CITIZENS = [
 			'The moon here is square. Nobody else finds this alarming.',
 			'When it rains, the thing under the town purrs. Like a kettle. A big, warm kettle.',
 			'Knocked on a painted door for an hour once. Best door in town.',
+			'Those new towers? Yesterday they were two floors. I counted. I keep a notebook.',
+		] },
+	{ name: 'Skate Zed', shirt: '#12b886', skin: '#f3c19d', hair: '#1b2a4a', speed: 3.8, skate: true,
+		lines: [
+			'Ollie over a manhole. Kickflip past the mayor. Lifestyle.',
+			'The roads here are only two tiles wide. Perfect half-pipe, if you squint.',
+			'Board says “NOT A BUG” on the bottom. Coincidence? Absolutely not.',
+			'Tried grinding the water tower. Fern filed a complaint. Worth it.',
+			'Gravity is optional if your framerate is high enough.',
+		] },
+	{ name: 'Tourist Tia', shirt: '#ff6b9d', skin: '#e8a87c', hair: '#f8f0e3', hat: '#ffd43b', speed: 0.85, camera: true,
+		lines: [
+			'*click* Perfect. Wait, is everything always this pixelated?',
+			'I came for the furniture store. Stayed for the dragon. 5 stars.',
+			'My itinerary says “see tall buildings.” Mission accomplished in six tiles.',
+			'Does the UFO take photos of us? Asking for my scrapbook.',
+			'Bought a postcard at Night Owl. It’s blank. Conceptual art.',
+		] },
+	{ name: 'Dash the Courier', shirt: '#ff922b', skin: '#c98d5e', hat: '#1b2a4a', speed: 3.0, pack: true,
+		lines: [
+			'Package for… the dragon? Signature required. This is fine.',
+			'ETA: three sunsets. Around here that’s an afternoon.',
+			'I’m not lost. The map is just 16×16 and very honest.',
+			'Hot soup, cold noodles, one singing sandwich. Standard loadout.',
+			'Tip in compliments. Stars on my rating are literal fireflies.',
+		] },
+	{ name: 'Neon Nikki', shirt: '#be4bdb', skin: '#f3c19d', hair: '#ff5ea8', speed: 1.4, neon: true,
+		lines: [
+			'I paint the signs after dark. The pixels stay lit out of respect.',
+			'Night Owl’s “OPEN” is my handwriting. Don’t tell them I freelanced it.',
+			'Pink on cyan. Cyan on pink. That’s the whole design system.',
+			'If a building isn’t blinking, is it even architecture?',
+			'The Bit Bank neon hums in B-flat. Sam can hear it. He hates it.',
 		] },
 ];
+
+// stationary / special street gags (not road-bound walkers)
+export const HOTDOG = {
+	name: 'Carl the Cart', shirt: '#e03131', skin: '#e8a87c', hat: '#fff',
+	lines: [
+		'Mustard is free. Existential dread is extra.',
+		'Best dogs in town. Also the only dogs that aren’t at the park.',
+		'Secret menu: the pixel relish. Looks wrong. Tastes right.',
+		'I park where the skyscraper shadows taste like lunch.',
+	],
+};
+
+export const ROOF_GUY = {
+	name: 'Roof Guy Greg', shirt: '#748ffc', skin: '#f3c19d', hair: '#2d3138',
+	lines: [
+		'Don’t mind me. Just living my best life at max altitude.',
+		'From up here the whole site is a brochure. Hi, brochure.',
+		'I came up for a signal. Stayed for the vibe. Forgot the ladder.',
+		'The UFO waved. I waved back. We’re in a group chat now.',
+	],
+};
+
+export const SANDWICH = {
+	name: 'the sandwich',
+	lines: [
+		'(a heroic sandwich flees justice)',
+		'I CONTAIN MULTITUDES. AND PICKLES.',
+		'(still Mo’s lunch. still free.)',
+		'You can’t catch carbs. That’s science.',
+	],
+};
 
 export const DOG_PARK = { x0: 33.5, z0: 34.5, x1: 37.5, z1: 37.4 };
 
@@ -214,10 +319,53 @@ export const MINER = {
 export const SPAWNS = [
 	[16, 27, 'x', 1], [13, 16, 'y', 1], [24, 11, 'x', -1], [29, 22, 'y', -1],
 	[6, 11, 'x', 1], [13, 33, 'y', -1], [34, 27, 'x', 1], [29, 6, 'y', 1],
+	[40, 11, 'x', -1], [13, 40, 'y', 1], [22, 27, 'x', 1], [29, 16, 'y', -1],
 ];
 
+// vehicle kinds map to different voxel silhouettes (eBoy: every car is unique)
 export const CARS = [
-	{ body: '#e03131', top: '#ffe3e3', speed: 5.5, spawn: [20, 11, 'x', 1] },
-	{ body: '#1971c2', top: '#d0ebff', speed: 4.6, spawn: [13, 20, 'y', -1] },
-	{ body: '#f08c00', top: '#fff3bf', speed: 5.0, spawn: [40, 27, 'x', -1] },
+	{ body: '#e03131', top: '#ffe3e3', speed: 5.5, spawn: [20, 11, 'x', 1], kind: 'sedan' },
+	{ body: '#1971c2', top: '#d0ebff', speed: 4.6, spawn: [13, 20, 'y', -1], kind: 'police' },
+	{ body: '#ffd43b', top: '#fff9db', speed: 5.0, spawn: [40, 27, 'x', -1], kind: 'taxi' },
+	{ body: '#9b59b6', top: '#e8d5f5', speed: 4.0, spawn: [29, 35, 'y', 1], kind: 'van', label: 'STATE' },
+	{ body: '#12b886', top: '#d3f9d8', speed: 5.8, spawn: [8, 11, 'x', 1], kind: 'sedan' },
+	{ body: '#e8590c', top: '#fff', speed: 6.4, spawn: [24, 11, 'x', -1], kind: 'scooter' },
+	{ body: '#343a40', top: '#868e96', speed: 4.4, spawn: [13, 30, 'y', 1], kind: 'sedan' },
+];
+
+// wishes for the fountain (and the odd shooting star)
+export const WISHES = [
+	'Wish granted: +1 good day. Non-transferable. No refunds.',
+	'Wish granted: the ducks now consider you a friend.',
+	'Wish granted: your next commit will compile. Probably.',
+	'Wish granted: one free cloud, fluffy side up.',
+	'Wish denied: “more furniture.” Wrong website. Keep the coin.',
+	'Wish granted: the cat forgives the five bucks. (She does not.)',
+	'Wish granted: the arcade cabinets ship… emotionally.',
+	'Wish granted: you are now honorary mayor for 8 minutes.',
+	'Wish granted: a firefly named Greg waves at you later.',
+	'Wish granted: zero unread emails. (Somewhere. Not here.)',
+];
+
+export const FIREFLY_NAMES = [
+	'Greg', 'Beep', 'Luma', 'Pip', 'Moss', 'Twig', 'Dot Jr.', 'Noodle',
+	'Pixel', 'Fizz', 'Mothball', 'Spark', 'Zig', 'Bloop', 'Fern Jr.', 'Wisp',
+	'Toast', 'Nugget', 'Pebble', 'Glint', 'Midge', 'Bumble', 'Sprout', 'Echo',
+	'Glim', 'Puddle', 'Crumb', 'Fable', 'Jelly', 'Puff', 'Miso', 'Zip',
+	'Loaf', 'Clover', 'Dusk', 'Mallow',
+];
+
+export const BUTTERFLY_LINES = [
+	'(a brief, beautiful orbit)',
+	'flap flap. (very busy.)',
+	'(pollinating your afternoon)',
+	'I was a caterpillar once. Growth mindset.',
+	'(lands on nothing in particular, leaves)',
+];
+
+export const PLANE_LINES = [
+	'Air mail! Contents: one compliment, no postage due.',
+	'Next stop: your inbox. (The real one. Eventually.)',
+	'I carry only good news. And one overdue library book.',
+	'Folded by Pat. Flown by hope. Delivered by vibes.',
 ];
