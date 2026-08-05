@@ -101,9 +101,6 @@ def execute_command(cmd):
             return git_status()
         elif command_name == 'system_info':
             return system_info()
-        elif command_name == 'web_search':
-            query = params.get('query', 'latest tech news')
-            return web_search(query)
         else:
             return f"Unknown command: {command_name}"
     except Exception as e:
@@ -181,10 +178,6 @@ def system_info():
         return f"Up: {uptime}, Load: {load}"
     except Exception as e:
         return f"Error: {str(e)[:50]}"
-
-def web_search(query):
-    """Perform web search"""
-    return f"Search queued: {query[:30]}..."
 
 def main_loop():
     """Main polling loop"""
