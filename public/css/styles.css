@@ -1,5 +1,27 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+button:focus-visible {
+  outline: 3px solid #e0447c;
+  outline-offset: 2px;
+}
+
+#noscript, #boot-error {
+  position: relative;
+  z-index: 30;
+  max-width: 28rem;
+  margin: 24px 16px;
+  padding: 16px 18px;
+  color: #1b2a4a;
+  background: #fdf3d7;
+  border: 3px solid #1b2a4a;
+  box-shadow: 4px 4px 0 rgba(27, 42, 74, 0.35);
+  user-select: text;
+  -webkit-user-select: text;
+}
+#noscript h1 { font-size: 20px; letter-spacing: 1px; margin-bottom: 8px; }
+#noscript p, #boot-error { font-size: 14px; line-height: 1.45; }
+#noscript p + p { margin-top: 8px; }
+
 html, body {
   height: 100%;
   overflow: hidden;
@@ -256,4 +278,10 @@ canvas#town.dragging { cursor: grabbing; }
 #toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #tiltshift, #toast {
+    transition: none;
+  }
 }

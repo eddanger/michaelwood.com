@@ -5,12 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>michaelwood.com · Woodtown</title>
   <meta name="description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
+  <link rel="canonical" href="https://michaelwood.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="michaelwood.com">
+  <meta property="og:url" content="https://michaelwood.com/">
+  <meta property="og:title" content="michaelwood.com · Woodtown">
+  <meta property="og:description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="michaelwood.com · Woodtown">
+  <meta name="twitter:description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
+  <meta name="theme-color" content="#6db5e8">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏘️</text></svg>">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <canvas id="town"></canvas>
+  <canvas id="town" role="img" aria-label="Woodtown, a tiny pixel town. Drag to wander, scroll to zoom, click people and buildings."></canvas>
   <div id="tiltshift" aria-hidden="true"></div>
+
+  <noscript>
+    <main id="noscript">
+      <h1>michaelwood.com</h1>
+      <p>Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.</p>
+      <p>This page needs JavaScript and WebGL to wander the town.</p>
+    </main>
+  </noscript>
 
   <div id="hud">
     <div id="wordmark">
@@ -19,31 +37,31 @@
     </div>
     <div id="hint">drag to wander &middot; scroll to zoom &middot; click people &amp; buildings</div>
   </div>
-  <div id="toast" hidden></div>
+  <div id="toast" hidden role="status" aria-live="polite"></div>
 
-  <div id="bubble" hidden>
+  <div id="bubble" hidden role="dialog" aria-labelledby="bubble-name" aria-describedby="bubble-line">
     <button id="bubble-close" aria-label="close">&times;</button>
     <div id="bubble-name"></div>
     <div id="bubble-line"></div>
     <div id="bubble-more">(click them again for more)</div>
   </div>
 
-  <div id="plaque" hidden>
+  <div id="plaque" hidden role="dialog" aria-labelledby="plaque-title" aria-describedby="plaque-body">
     <button id="plaque-close" aria-label="close">&times;</button>
     <h2 id="plaque-title"></h2>
     <p id="plaque-body"></p>
     <button id="plaque-action" hidden></button>
   </div>
 
-  <div id="wall-mode" hidden>
-    <canvas id="wall-canvas"></canvas>
+  <div id="wall-mode" hidden role="dialog" aria-label="The Wall">
+    <canvas id="wall-canvas" role="img" aria-label="Shared graffiti wall. Draw to leave a mark."></canvas>
     <div id="wall-top">
       <button id="wall-back">&larr; back to town</button>
       <div id="wall-title">THE WALL <span id="wall-count"></span></div>
     </div>
     <div id="wall-tools">
-      <div id="wall-colors"></div>
-      <div id="wall-sizes"></div>
+      <div id="wall-colors" role="group" aria-label="spray colors"></div>
+      <div id="wall-sizes" role="group" aria-label="spray sizes"></div>
     </div>
   </div>
 
