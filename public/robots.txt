@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /apps
+
+Sitemap: https://michaelwood.com/sitemap.xml

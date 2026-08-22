@@ -7,6 +7,10 @@ const PALETTE = [
 	'#ff3b6b', '#ff8c1a', '#ffd400', '#3ddc55', '#28c7a0',
 	'#33b6ff', '#4d6bff', '#b04dff', '#ff5ed2', '#ffffff', '#1a1a1e',
 ];
+const PALETTE_NAMES = [
+	'pink', 'orange', 'yellow', 'green', 'teal',
+	'sky', 'blue', 'purple', 'magenta', 'white', 'black',
+];
 const SIZES = { S: 7, M: 14, L: 26 };
 const MAX_POINTS = 300;
 const MAX_AGE_MS = 60 * 86400_000;
@@ -165,10 +169,12 @@ export function initWallMode(wall, onExit) {
 	let raf = null;
 
 	// palette buttons
-	for (const c of PALETTE) {
+	PALETTE.forEach((c, i) => {
 		const b = document.createElement('button');
+		b.type = 'button';
 		b.style.background = c;
 		b.dataset.color = c;
+		b.setAttribute('aria-label', `${PALETTE_NAMES[i]} spray`);
 		if (c === color) b.classList.add('active');
 		b.addEventListener('click', () => {
 			color = c;
@@ -176,10 +182,12 @@ export function initWallMode(wall, onExit) {
 			colorsEl.querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
 		});
 		colorsEl.appendChild(b);
-	}
+	});
 	for (const k of Object.keys(SIZES)) {
 		const b = document.createElement('button');
+		b.type = 'button';
 		b.textContent = k;
+		b.setAttribute('aria-label', `${k === 'S' ? 'small' : k === 'M' ? 'medium' : 'large'} spray`);
 		if (k === sizeKey) b.classList.add('active');
 		b.addEventListener('click', () => {
 			sizeKey = k;
@@ -280,5 +288,5 @@ export function initWallMode(wall, onExit) {
 			: '· fresh bricks, first spray is yours';
 	}
 
-	return { open };
+	return { open, close };
 }

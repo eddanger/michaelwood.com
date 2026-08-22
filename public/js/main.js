@@ -8,7 +8,17 @@ import { tileType, inBuildingZone } from './data.js';
 import { createWall, initWallMode } from './wall.js';
 
 const canvas = document.getElementById('town');
-const gfx = createGfx(canvas);
+let gfx;
+try {
+	gfx = createGfx(canvas);
+} catch (err) {
+	console.error(err);
+	const msg = document.createElement('p');
+	msg.id = 'boot-error';
+	msg.textContent = 'Woodtown needs WebGL to wander.';
+	canvas.replaceWith(msg);
+	throw err;
+}
 
 const wall = createWall();
 const town = buildTown(gfx.scene, wall.canvas);
@@ -225,6 +235,19 @@ function enterWall() {
 	hideBubble();
 	wallMode.open();
 }
+
+document.addEventListener('keydown', (e) => {
+	if (e.key !== 'Escape') return;
+	if (inWall) {
+		wallMode.close();
+		return;
+	}
+	if (!plaque.hidden) {
+		hidePlaque();
+		return;
+	}
+	if (!bubble.hidden) hideBubble();
+});
 
 if (location.hash === '#wall') enterWall();
 if (location.hash === '#far') {
