@@ -24,6 +24,11 @@ export default {
 	async fetch(request, env) {
 		const url = new URL(request.url);
 
+		// Browsers still ask for /favicon.ico; the live mark is the house emoji SVG.
+		if (url.pathname === '/favicon.ico') {
+			return Response.redirect(new URL('/favicon.svg', url), 301);
+		}
+
 		if (url.pathname === '/api/wall') {
 			try {
 				if (request.method === 'GET') return await getWall(env);
