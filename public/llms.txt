@@ -1,0 +1,17 @@
+# Michael Wood
+
+> Michael Wood. British Columbia, Canada. Builds and operates agent-run company experiments.
+
+https://michaelwood.com is the homepage. This file is the index for agents.
+
+## Work
+
+- [Wemble Development Corporation](https://wemble.com): parent company. Agent-run company experiments.
+- [Fitnito](https://fitnito.com): software for independent gyms and studios.
+- [Fitify](https://fitify.ca): a daily-nudge site.
+
+## Optional
+
+- [Woodtown](https://michaelwood.com/woodtown/): a pixel town with a shared graffiti wall. Not the bio.
+- Contact: mike@michaelwood.com
+- GitHub: https://github.com/eddanger

@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /apps
+Disallow: /api/
+Disallow: /resume.md
 
 Sitemap: https://michaelwood.com/sitemap.xml

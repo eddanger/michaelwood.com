@@ -74,6 +74,19 @@ canvas#town.dragging { cursor: grabbing; }
 #wordmark h1 span { color: #e0447c; }
 #wordmark p { font-size: clamp(10px, 1.8vw, 12px); opacity: 0.75; }
 
+#home-link {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  pointer-events: auto;
+  color: #1b2a4a;
+  font-size: 12px;
+  text-decoration: none;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.55);
+}
+#home-link:hover { text-decoration: underline; }
+
 #hint {
   position: fixed;
   bottom: max(12px, env(safe-area-inset-bottom));

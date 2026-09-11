@@ -2,69 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>michaelwood.com · Woodtown</title>
-  <meta name="description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Michael Wood</title>
+  <meta name="description" content="Michael Wood. British Columbia, Canada. Builds and operates agent-run companies: Wemble, Fitnito, Fitify.">
   <link rel="canonical" href="https://michaelwood.com/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="michaelwood.com">
   <meta property="og:url" content="https://michaelwood.com/">
-  <meta property="og:title" content="michaelwood.com · Woodtown">
-  <meta property="og:description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
+  <meta property="og:title" content="Michael Wood">
+  <meta property="og:description" content="Michael Wood. British Columbia, Canada. Builds and operates agent-run companies: Wemble, Fitnito, Fitify.">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="michaelwood.com · Woodtown">
-  <meta name="twitter:description" content="Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.">
-  <meta name="theme-color" content="#6db5e8">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏘️</text></svg>">
-  <link rel="stylesheet" href="css/styles.css">
+  <meta name="twitter:title" content="Michael Wood">
+  <meta name="twitter:description" content="Michael Wood. British Columbia, Canada. Builds and operates agent-run companies: Wemble, Fitnito, Fitify.">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/css/home.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Michael Wood",
+    "url": "https://michaelwood.com/",
+    "email": "mailto:mike@michaelwood.com",
+    "jobTitle": "Builder and operator of agent-run companies",
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "British Columbia",
+      "addressCountry": "CA"
+    },
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Wemble Development Corporation",
+      "url": "https://wemble.com"
+    },
+    "sameAs": [
+      "https://github.com/eddanger",
+      "https://keybase.io/mdub"
+    ]
+  }
+  </script>
 </head>
 <body>
-  <canvas id="town" role="img" aria-label="Woodtown, a tiny pixel town. Drag to wander, scroll to zoom, click people and buildings."></canvas>
-  <div id="tiltshift" aria-hidden="true"></div>
-
-  <noscript>
-    <main id="noscript">
-      <h1>michaelwood.com</h1>
-      <p>Woodtown — a tiny pixel town with a graffiti wall anyone can paint. Not a furniture store.</p>
-      <p>This page needs JavaScript and WebGL to wander the town.</p>
-    </main>
-  </noscript>
-
-  <div id="hud">
-    <div id="wordmark">
-      <h1>michaelwood<span>.com</span></h1>
-      <p id="pop-line">welcome to Woodtown &middot; pop. 1 + you</p>
-    </div>
-    <div id="hint">drag to wander &middot; scroll to zoom &middot; click people &amp; buildings</div>
-  </div>
-  <div id="toast" hidden role="status" aria-live="polite"></div>
-
-  <div id="bubble" hidden role="dialog" aria-labelledby="bubble-name" aria-describedby="bubble-line">
-    <button id="bubble-close" aria-label="close">&times;</button>
-    <div id="bubble-name"></div>
-    <div id="bubble-line"></div>
-    <div id="bubble-more">(click them again for more)</div>
-  </div>
-
-  <div id="plaque" hidden role="dialog" aria-labelledby="plaque-title" aria-describedby="plaque-body">
-    <button id="plaque-close" aria-label="close">&times;</button>
-    <h2 id="plaque-title"></h2>
-    <p id="plaque-body"></p>
-    <button id="plaque-action" hidden></button>
-  </div>
-
-  <div id="wall-mode" hidden role="dialog" aria-label="The Wall">
-    <canvas id="wall-canvas" role="img" aria-label="Shared graffiti wall. Draw to leave a mark."></canvas>
-    <div id="wall-top">
-      <button id="wall-back">&larr; back to town</button>
-      <div id="wall-title">THE WALL <span id="wall-count"></span></div>
-    </div>
-    <div id="wall-tools">
-      <div id="wall-colors" role="group" aria-label="spray colors"></div>
-      <div id="wall-sizes" role="group" aria-label="spray sizes"></div>
-    </div>
-  </div>
-
-  <script type="module" src="js/main.js"></script>
+  <main>
+    <header>Michael Wood</header>
+    <p>British Columbia, Canada.</p>
+    <p>I build and operate companies that run on agents.</p>
+    <p>
+      <a href="https://wemble.com">Wemble Development Corporation</a> is the parent.
+      <a href="https://fitnito.com">Fitnito</a> is software for independent gyms and studios.
+      <a href="https://fitify.ca">Fitify</a> is a daily-nudge site.
+      The rest is experiments in letting software run the shop.
+    </p>
+    <footer>
+      <a href="mailto:mike@michaelwood.com">mike@michaelwood.com</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/eddanger">github</a>
+      <span class="sep">·</span>
+      <a href="/woodtown/">woodtown</a>
+    </footer>
+  </main>
 </body>
 </html>

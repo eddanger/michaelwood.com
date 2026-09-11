@@ -1,0 +1,62 @@
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #f4f4f1;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 28rem;
+  padding: 18vh 24px 96px;
+  text-align: left;
+}
+
+header {
+  margin: 0 0 56px;
+  color: #6e6e6a;
+  font-weight: 500;
+}
+
+p {
+  margin: 0 0 1.15em;
+}
+
+a {
+  color: #f4f4f1;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: #fff;
+}
+
+a:focus-visible {
+  outline: 1px solid #f4f4f1;
+  outline-offset: 3px;
+}
+
+footer {
+  margin-top: 56px;
+  color: #6e6e6a;
+  font-size: 13px;
+}
+
+footer a {
+  color: #6e6e6a;
+}
+
+footer a:hover {
+  color: #f4f4f1;
+}
+
+.sep {
+  margin: 0 0.35em;
+}
