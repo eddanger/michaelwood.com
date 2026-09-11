@@ -1,24 +1,14 @@
-# michaelwood.com — Woodtown 🏘️
+# michaelwood.com
 
-A tiny Three.js voxel town with a shared graffiti wall. Not a furniture store.
-
-Drag to wander, scroll to zoom, click people and buildings. The big brick
-wall downtown is painted by every visitor — strokes persist in Cloudflare D1
-and slowly weather away over ~60 days. There's a UFO, dinosaur bones, a
-sleeping dragon, dogs with zoomies, fireworks after dark, and a busker who
-actually plays (WebAudio). The town hall clock shows your local time.
+Spare homepage for [Michael Wood](https://michaelwood.com) — a guy from the west
+coast of Canada. Husband, father of two, dog dad. Not a portfolio.
 
 ## Stack
 
-- Three.js voxel town rendered through a pixelation pipeline (low-res buffer,
-  nearest-neighbor upscale, orthographic iso camera) — real 3D, pixel-art look
 - Static assets + a small Worker (`src/worker.js`) on Cloudflare Workers
-- D1 (`michaelwood-wall`) stores graffiti strokes; see `migrations/`
-- No build step, no framework — vanilla ES modules in `public/js/`
-  - `gfx.js` — renderer/camera/picking · `data.js` — the town as data
-  - `painters.js` — canvas art that becomes textures (ground, facades, underground)
-  - `town3d.js` / `life3d.js` — static scene · living entities
-  - `wall.js` — graffiti wall (2D, shared via D1) · `main.js` — glue
+- Homepage is plain HTML/CSS (`public/index.html`, `public/css/home.css`)
+- Woodtown: Three.js voxel town in `public/js/`, D1 (`michaelwood-wall`) for graffiti
+- No build step, no framework
 
 ## Dev
 
@@ -26,6 +16,7 @@ actually plays (WebAudio). The town hall clock shows your local time.
 bun install
 npx wrangler d1 migrations apply michaelwood-wall --local  # once
 bun run dev                                                # http://localhost:8787
+bun test tests/
 ```
 
 ## Deploy
@@ -34,7 +25,12 @@ bun run dev                                                # http://localhost:87
 npx wrangler deploy   # serves michaelwood.com + www (custom domains)
 ```
 
-## Debug hashes
+## Crawler files
+
+`/robots.txt`, `/sitemap.xml`, `/favicon.ico`, and `/llms.txt` live in `public/`
+and must 200 at the origin. The sitemap lists only the homepage.
+
+## Woodtown debug hashes
 
 | hash | what |
 | --- | --- |
@@ -58,8 +54,9 @@ npx wrangler deploy   # serves michaelwood.com + www (custom domains)
 
 ## Legacy
 
-`/apps`, `/resume.md`, `/keybase.txt`, `/notbug.gif` still served from
-`public/`. GarageBot lives at garagebot.michaelwood.com (dokku, separate).
+`/apps`, `/resume.md`, `/keybase.txt` still served from `public/`. GarageBot
+lives at garagebot.michaelwood.com (dokku, separate). `/resume.md` is not linked
+from the homepage and is disallowed in `robots.txt`.
 
 An abandoned forest prototype still exists under `public/js/v5/` but is not
 linked from the site.
