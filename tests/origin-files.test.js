@@ -74,6 +74,7 @@ describe('crawler files at the origin', () => {
 		expect(body).toContain('Sitemap: https://michaelwood.com/sitemap.xml');
 		expect(body).toContain('Disallow: /apps');
 		expect(body).toContain('Disallow: /resume.md');
+		expect(body).toContain('Disallow: /woodtown');
 	});
 
 	test('sitemap.xml lists only the identity homepage', async () => {
@@ -111,14 +112,7 @@ describe('pages at the origin', () => {
 		expect(body).toContain('west coast of Canada');
 		expect(body).toContain('father of two');
 		expect(body).not.toContain('Wemble');
+		expect(body).not.toContain('woodtown');
 		expect(body).not.toContain('id="town"');
-	});
-
-	test('Woodtown is a secondary page', async () => {
-		const res = await fetch(`${origin}/woodtown/`);
-		expect(res.status).toBe(200);
-		const body = await res.text();
-		expect(body).toContain('id="town"');
-		expect(body).toContain('https://michaelwood.com/woodtown/');
 	});
 });

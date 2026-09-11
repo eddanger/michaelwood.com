@@ -2,16 +2,11 @@
 
 > Michael Wood. A guy from the west coast of Canada. Husband, father of two, dog dad.
 
-https://michaelwood.com is the homepage. This file is for agents.
+https://michaelwood.com is the homepage.
 
 ## Also
 
 - [Wemble Development Corporation](https://wemble.com)
 - [Fitnito](https://fitnito.com): software for independent gyms and studios.
 - [Fitify](https://fitify.ca)
-
-## Optional
-
-- [Woodtown](https://michaelwood.com/woodtown/): a pixel town with a shared graffiti wall. Not the bio.
 - mike@michaelwood.com
-- GitHub: https://github.com/eddanger

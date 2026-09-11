@@ -3,5 +3,6 @@ Allow: /
 Disallow: /apps
 Disallow: /api/
 Disallow: /resume.md
+Disallow: /woodtown
 
 Sitemap: https://michaelwood.com/sitemap.xml

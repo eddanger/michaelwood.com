@@ -38,10 +38,9 @@ describe('homepage identity', () => {
 		expect(home).not.toMatch(PII);
 	});
 
-	test('keeps Woodtown as a secondary link, not the bio', () => {
-		expect(home).toContain('href="/woodtown/"');
+	test('does not surface Woodtown on the homepage', () => {
+		expect(home).not.toContain('woodtown');
 		expect(home).not.toContain('id="town"');
-		expect(home).not.toContain('welcome to Woodtown');
 	});
 
 	test('exposes Person JSON-LD for crawlers', () => {
@@ -73,6 +72,7 @@ describe('crawlers', () => {
 		expect(robots).toContain('Sitemap: https://michaelwood.com/sitemap.xml');
 		expect(robots).toContain('Disallow: /apps');
 		expect(robots).toContain('Disallow: /resume.md');
+		expect(robots).toContain('Disallow: /woodtown');
 	});
 
 	test('sitemap lists only the identity homepage', () => {
@@ -89,7 +89,7 @@ describe('crawlers', () => {
 		expect(llms).toContain('Fitnito');
 		expect(llms).toContain('Fitify');
 		expect(llms).toContain('Wemble');
-		expect(llms).toContain('https://michaelwood.com/woodtown/');
+		expect(llms).not.toContain('woodtown');
 		expect(llms).not.toContain('/resume.md');
 		expect(llms).not.toMatch(PII);
 	});
