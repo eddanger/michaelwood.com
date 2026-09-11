@@ -1,7 +1,7 @@
 # michaelwood.com
 
-Spare homepage for [Michael Wood](https://michaelwood.com) — British Columbia, Canada.
-Builder and operator of agent-run company experiments (Wemble, Fitnito, Fitify).
+Spare homepage for [Michael Wood](https://michaelwood.com) — a guy from the west
+coast of Canada. Husband, father of two, dog dad. Not a portfolio.
 
 [Woodtown](/woodtown/) is still here: a tiny Three.js voxel town with a shared
 graffiti wall. It is a side page, not the bio.

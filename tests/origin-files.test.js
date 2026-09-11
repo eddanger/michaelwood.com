@@ -108,7 +108,9 @@ describe('pages at the origin', () => {
 		expect(res.status).toBe(200);
 		const body = await res.text();
 		expect(body).toContain('<title>Michael Wood</title>');
-		expect(body).toContain('Wemble Development Corporation');
+		expect(body).toContain('west coast of Canada');
+		expect(body).toContain('father of two');
+		expect(body).not.toContain('Wemble');
 		expect(body).not.toContain('id="town"');
 	});
 

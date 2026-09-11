@@ -13,9 +13,9 @@ const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 
 const llms = readFileSync(new URL('../public/llms.txt', import.meta.url), 'utf8');
 
 const DESCRIPTION =
-	'Michael Wood. British Columbia, Canada. Builds and operates agent-run companies: Wemble, Fitnito, Fitify.';
+	'Michael Wood. A guy from the west coast of Canada. Husband, father of two, dog dad.';
 
-const PII = /4631|53rd|604-779|Delta BC|kids|school|password/i;
+const PII = /4631|53rd|604-779|Delta BC|school|password/i;
 
 describe('homepage identity', () => {
 	test('names Michael Wood and mirrors the description to Open Graph', () => {
@@ -26,16 +26,15 @@ describe('homepage identity', () => {
 		expect(home).toContain('<meta property="og:url" content="https://michaelwood.com/">');
 	});
 
-	test('states public work facts without dumping a resume', () => {
-		expect(home).toContain('British Columbia, Canada.');
-		expect(home).toContain('Wemble Development Corporation');
-		expect(home).toContain('https://wemble.com');
-		expect(home).toContain('Fitnito');
-		expect(home).toContain('https://fitnito.com');
-		expect(home).toContain('Fitify');
-		expect(home).toContain('https://fitify.ca');
+	test('is a short human placeholder, not a work showcase', () => {
+		expect(home).toContain('A guy from the west coast of Canada.');
+		expect(home).toContain('Husband, father of two, dog dad.');
 		expect(home).toContain('mike@michaelwood.com');
+		expect(home).not.toContain('Wemble');
+		expect(home).not.toContain('Fitnito');
+		expect(home).not.toContain('Fitify');
 		expect(home).not.toContain('/resume.md');
+		expect(home).not.toContain('github.com');
 		expect(home).not.toMatch(PII);
 	});
 
@@ -48,8 +47,8 @@ describe('homepage identity', () => {
 	test('exposes Person JSON-LD for crawlers', () => {
 		expect(home).toContain('"@type": "Person"');
 		expect(home).toContain('"name": "Michael Wood"');
-		expect(home).toContain('Wemble Development Corporation');
-		expect(home).toContain('https://github.com/eddanger');
+		expect(home).toContain('west coast of Canada');
+		expect(home).not.toContain('jobTitle');
 	});
 });
 
@@ -83,9 +82,10 @@ describe('crawlers', () => {
 		expect(sitemap).not.toContain('/woodtown');
 	});
 
-	test('llms.txt is the agent bio and does not point at the resume', () => {
+	test('llms.txt leads with the person and tucks work under Also', () => {
 		expect(llms).toContain('Michael Wood');
-		expect(llms).toContain('British Columbia, Canada');
+		expect(llms).toContain('west coast of Canada');
+		expect(llms).toContain('father of two');
 		expect(llms).toContain('Fitnito');
 		expect(llms).toContain('Fitify');
 		expect(llms).toContain('Wemble');
